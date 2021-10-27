@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "969793343289",
+    "project_id": "friendsync-9a5af",
+    "storage_bucket": "friendsync-9a5af.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969793343289:android:a95a10f2903154fe1f22e8",
+        "android_client_info": {
+          "package_name": "com.steffanic.friendsync"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "969793343289-6r09g47gc9livnhne8vu9rjaokjjo07o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxiLOOwP7y2UEwR5ZnvafdF3z--EWoxMs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "969793343289-6r09g47gc9livnhne8vu9rjaokjjo07o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

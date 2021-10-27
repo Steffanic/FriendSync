@@ -1,0 +1,311 @@
+import 'package:flutter/material.dart';
+import 'package:friend_sync/arguments.dart';
+import 'package:friend_sync/group.dart';
+
+const double IMAGE_MARGIN = 6.0;
+
+class MainPage extends StatefulWidget {
+  final List<Widget> friendGroups;
+
+  MainPage({required this.friendGroups});
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        bottomNavigationBar: BottomNavigationBar(
+            onTap: _onItemTapped,
+            items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.settings), label: "Settings")
+            ]),
+        body: Container(
+          decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.white, Colors.blue])),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Flexible(
+                child: CurrentUserStatusCard(),
+                flex: 2,
+              ),
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.all(24),
+                  margin: EdgeInsets.only(left: 32, right: 32),
+                  child: GridView.count(
+                    crossAxisSpacing: 25,
+                    crossAxisCount: 2,
+                    children: widget.friendGroups,
+                  ),
+                ),
+                flex: 4,
+              )
+            ],
+          ),
+        ));
+  }
+
+  void _onItemTapped(int index) {
+    if (index == 0) {
+      Navigator.popUntil(context, ModalRoute.withName('/'));
+    }
+  }
+}
+
+class CurrentUserStatusCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 150,
+      margin: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Colors.white,
+          width: 4,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.purple[100],
+      ),
+      // Begin row
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+              flex: 3,
+              child: Container(
+                margin: EdgeInsets.all(IMAGE_MARGIN),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 2,
+                  ),
+                  image: const DecorationImage(
+                      image: NetworkImage("https://i.imgur.com/cWgJmWt.jpg")),
+                  shape: BoxShape.circle,
+                ), //Profile picture
+              )),
+          Expanded(
+            flex: 6,
+            child: Container(
+                margin: EdgeInsets.all(6),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.max,
+                  children: const [
+                    Flexible(
+                        flex: 4,
+                        child: FittedBox(
+                            child: Text(
+                          "Patrick Steffanic",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontFamily: "Noto Sans"),
+                        ))),
+                    Flexible(
+                        flex: 2,
+                        child: Text("Status: Down to clown!",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontFamily: "Noto Sans"))),
+                  ],
+                )),
+          ),
+          Flexible(
+              flex: 1,
+              child: Container(
+                margin: EdgeInsets.all(6),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.max,
+                  children: const [
+                    Icon(
+                      Icons.settings,
+                      color: Colors.white,
+                    ),
+                    Icon(
+                      Icons.person,
+                      color: Colors.green,
+                    ),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+}
+
+class FriendGroupCard extends StatelessWidget {
+  final String groupName;
+  final String groupTagline;
+  final String groupImageURL;
+  final int groupSize;
+  final bool favoriteGroup;
+
+  FriendGroupCard(
+      {this.groupName = "The Squad",
+      this.groupTagline = "We out here.",
+      this.groupImageURL = "https://i.imgur.com/cWgJmWt.jpg",
+      this.groupSize = 4,
+      this.favoriteGroup = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+        // Design decision to go with square tiles
+        aspectRatio: 1,
+        child: InkWell(
+          // Tapping on a group page tile will bring you to a new group page
+          // it passes the details about the group that was selected as arguments.
+          onTap: () {
+            Navigator.pushNamed(context, '/group',
+                arguments: GroupPageArguments(groupName, groupTagline,
+                    groupImageURL, groupSize, favoriteGroup));
+          },
+          child: Container(
+            height: 150,
+            margin: EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.white,
+                width: 4,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.purple[100],
+            ),
+            // Begin row
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                    flex: 5,
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Flexible(
+                              // This is the group's profile picture
+                              flex: 5,
+                              child: Container(
+                                margin: EdgeInsets.all(IMAGE_MARGIN),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                  image: DecorationImage(
+                                      fit: BoxFit.cover,
+                                      image: NetworkImage(groupImageURL)),
+                                  shape: BoxShape.circle,
+                                ), //Profile picture
+                              )),
+                          Flexible(
+                              // These are the favorite icon
+                              // and number of member icon
+                              flex: 2,
+                              child: Container(
+                                  margin:
+                                      const EdgeInsets.only(right: 6, top: 6),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      (favoriteGroup
+                                          ? Icon(Icons.star,
+                                              color: Colors.yellow)
+                                          : Icon(Icons.star_border,
+                                              color: Colors.white)),
+                                      SizedBox(
+                                        width: 35,
+                                        child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Expanded(
+                                                  child: Text("${groupSize}")),
+                                              Icon(
+                                                Icons.person,
+                                                color: Colors.green,
+                                              ),
+                                            ]),
+                                      ),
+                                    ],
+                                  )))
+                        ])),
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                      margin: EdgeInsets.all(8),
+                      child: FittedBox(
+                          child: Text(
+                        groupName,
+                        style: TextStyle(fontFamily: "Noto Sans"),
+                      ))),
+                ),
+              ],
+            ),
+          ),
+        ));
+  }
+}
+
+class AddNewGroupCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+        aspectRatio: 1,
+        child: InkWell(
+          // Tapping on a group page tile will bring you to a new group page
+          // it passes the details about the group that was selected as arguments.
+          onTap: () {
+            Navigator.pushNamed(context, '/add_new_group',);
+          },
+        child: Container(
+            margin: EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.white,
+                width: 4,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.purple[100],
+            ),
+            // Begin row
+            child: FittedBox(
+                fit: BoxFit.fill,
+                child: Icon(
+                  Icons.add_circle,
+                ))));
+  }
+}
+
+class BlankCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+        aspectRatio: 1,
+        child: Container(
+          margin: EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.white,
+              width: 4,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.purple[100],
+          ),
+          // Begin row
+        ));
+  }
+}
