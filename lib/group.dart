@@ -1,48 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:friend_sync/providers.dart';
+import 'package:provider/provider.dart';
 
 const double IMAGE_MARGIN = 6.0;
 
-class Member {
-  final String memberName;
-  final String memberProfilePicture;
-
-  const Member(
-      {this.memberName = "Patrick Steffanic",
-      this.memberProfilePicture = "https://i.imgur.com/cWgJmWt.jpg"});
-}
-
-class GroupPageState {
-  List<Member> groupMembers;
-  final String groupName;
-  final String groupTagline;
-  final String groupImageURL;
-  final int groupSize;
-  final bool favoriteGroup;
-
-  GroupPageState(this.groupMembers, this.groupName, this.groupTagline,
-      this.groupImageURL, this.groupSize, this.favoriteGroup);
-}
-
 class GroupPage extends StatefulWidget {
-  const GroupPage({Key? key}) : super(key: key);
+  const GroupPage({
+    Key? key,
+  }) : super(key: key);
 
   @override
   _GroupPageState createState() => _GroupPageState();
 }
 
 class _GroupPageState extends State<GroupPage> {
-  var groupState;
-
-  _GroupPageState(
-      {this.groupState});
+  late final int groupID;
+  bool groupIDInit = false;
+  _GroupPageState();
 
   @override
   Widget build(BuildContext context) {
-    final args =
-        ModalRoute.of(context)!.settings.arguments as GroupPageArguments;
-    groupState = args.groupName;
+    if (!groupIDInit) {
+      groupID = ModalRoute.of(context)!.settings.arguments as int;
+      groupIDInit = true;
+    }
     return Scaffold(
         bottomNavigationBar: BottomNavigationBar(
             onTap: _onItemTapped,
@@ -62,20 +45,27 @@ class _GroupPageState extends State<GroupPage> {
                 //
                 //TODO: Pass group details as arguments to keep the state managed in a consistent way.
                 //
-                child: GroupStatusCard(),
+                child: Consumer<FriendGroupProvider>(
+                    builder: (context, friendGroupProvider, child) =>
+                        GroupStatusCard(
+                            friendGroupProvider.getGroupByID(groupID))),
                 flex: 2,
               ),
               Flexible(
-                  child: Wrap(
-                direction: Axis.horizontal,
-                spacing: 12.0,
-                runSpacing: 12.0,
-                children: [
-                  ...groupMembers
-                      .map((mem) => MemberStatusChip(member: mem))
-                      .toList(),
-                  AddMemberCard(_addMember)
-                ],
+                  child: Consumer<FriendGroupProvider>(
+                builder: (context, friendGroupProvider, child) => Wrap(
+                  direction: Axis.horizontal,
+                  spacing: 12.0,
+                  runSpacing: 12.0,
+                  children: [
+                    ...friendGroupProvider
+                        .getGroupByID(groupID)
+                        .groupMembers
+                        .map((mem) => MemberStatusChip(member: mem))
+                        .toList(),
+                    AddMemberCard(_addMember)
+                  ],
+                ),
               ))
             ])));
   }
@@ -86,17 +76,16 @@ class _GroupPageState extends State<GroupPage> {
     }
   }
 
-  void _addMember(newMember) {
-    if (groupMembers
-        .where((mem) => mem.memberName == newMember.memberName)
-        .isNotEmpty) {
+  void _addMember(Member newMember, FriendGroupProvider friendGroupProvider) {
+    if (friendGroupProvider.isInGroup(newMember, groupID)) {
       _showToast(context, "They are already in your group!");
     } else {
-      setState(() {
-        groupMembers = [...groupMembers, newMember];
-      });
+      friendGroupProvider.addMember(groupID, newMember);
       _showToast(
-          context, newMember.memberName + " has been added to " + groupName);
+          context,
+          newMember.memberName +
+              " has been added to " +
+              friendGroupProvider.getGroupByID(groupID).groupName);
     }
   }
 
@@ -111,15 +100,16 @@ class _GroupPageState extends State<GroupPage> {
 }
 
 class GroupStatusCard extends StatelessWidget {
+  final GroupPageState groupState;
+
+  const GroupStatusCard(this.groupState, {Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    final args =
-        ModalRoute.of(context)!.settings.arguments as GroupPageArguments;
-
     return Container(
       //Container configuration begin
       height: 150,
-      margin: EdgeInsets.all(12),
+      margin: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border.all(
           color: Colors.white,
@@ -145,7 +135,7 @@ class GroupStatusCard extends StatelessWidget {
                     width: 2,
                   ),
                   image: DecorationImage(
-                      image: NetworkImage(args.groupImageURL),
+                      image: NetworkImage(groupState.groupImageURL),
                       fit: BoxFit.cover),
                   shape: BoxShape.circle,
                 ), //Profile picture
@@ -164,13 +154,13 @@ class GroupStatusCard extends StatelessWidget {
                         flex: 4,
                         child: FittedBox(
                             child: Text(
-                          args.groupName,
+                          groupState.groupName,
                           textAlign: TextAlign.center,
                           style: TextStyle(fontFamily: "Noto Sans"),
                         ))),
                     Flexible(
                         flex: 2,
-                        child: Text(args.groupTagline,
+                        child: Text(groupState.groupTagline,
                             textAlign: TextAlign.center,
                             style: TextStyle(fontFamily: "Noto Sans"))),
                   ],
@@ -185,11 +175,15 @@ class GroupStatusCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    (args.favoriteGroup
+                    (groupState.favoriteGroup
                         ? Icon(Icons.star, color: Colors.yellow)
                         : Icon(Icons.star_border, color: Colors.white)),
                     Row(mainAxisSize: MainAxisSize.min, children: [
-                      Expanded(child: Text("${args.groupSize}")),
+                      Expanded(
+                          child: Consumer<FriendGroupProvider>(
+                              builder: (context, friendGroupProvider, child) =>
+                                  Text(
+                                      "${friendGroupProvider.friendGroups.where((grp) => grp.groupID == groupState.groupID).toList()[0].groupSize}"))),
                       Icon(
                         Icons.person,
                         color: Colors.green,
@@ -207,7 +201,7 @@ class GroupStatusCard extends StatelessWidget {
 class MemberStatusChip extends StatelessWidget {
   final Member member;
 
-  MemberStatusChip({this.member = const Member()});
+  const MemberStatusChip({this.member = const Member()});
 
   @override
   Widget build(BuildContext context) {
@@ -245,10 +239,11 @@ class AddMemberCard extends StatelessWidget {
 }
 
 class AddMemberDialog extends StatelessWidget {
-  Function addMemberFunction;
-  String genericMemberURL =
-      "https://www.postplanner.com/hs-fs/hub/513577/file-2886416984-png/blog-files/facebook-profile-pic-vs-cover-photo-sq.png?width=250&height=250&name=facebook-profile-pic-vs-cover-photo-sq.png";
-  AddMemberDialog(this.addMemberFunction);
+  final Function addMemberFunction;
+  final String genericMemberURL =
+      "https://im4.ezgif.com/tmp/ezgif-4-cb158ea80934.gif";
+  // ignore: use_key_in_widget_constructors
+  const AddMemberDialog(this.addMemberFunction);
 
   @override
   Widget build(BuildContext context) {
@@ -258,42 +253,61 @@ class AddMemberDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
           Text("Add existing friends:"),
-          Wrap(
-            children: [
-              //Replace with access to some database of users
-              InkWell(
-                  onTap: () => addMemberFunction(Member(
-                      memberName: "Friend Joe",
-                      memberProfilePicture: genericMemberURL)),
-                  child: MemberStatusChip(
+          Consumer<FriendGroupProvider>(
+            builder: (context, friendGroupProvider, child) => Wrap(
+              children: [
+                //Replace with access to some database of users
+                InkWell(
+                    onTap: () => addMemberFunction(
+                        Member(
+                            memberID: 1,
+                            memberName: "Friend Joe",
+                            memberProfilePicture: genericMemberURL),
+                        friendGroupProvider),
+                    child: MemberStatusChip(
                       member: Member(
+                          memberID: 1,
                           memberName: "Friend Joe",
-                          memberProfilePicture: genericMemberURL))),
-              InkWell(
-                  onTap: () => addMemberFunction(Member(
-                      memberName: "Friend Jane",
-                      memberProfilePicture: genericMemberURL)),
-                  child: MemberStatusChip(
-                      member: Member(
-                          memberName: "Friend Jane",
-                          memberProfilePicture: genericMemberURL))),
-              InkWell(
-                  onTap: () => addMemberFunction(Member(
-                      memberName: "Friend Malik",
-                      memberProfilePicture: genericMemberURL)),
-                  child: MemberStatusChip(
-                      member: Member(
-                          memberName: "Friend Malik",
-                          memberProfilePicture: genericMemberURL))),
-              InkWell(
-                  onTap: () => addMemberFunction(Member(
-                      memberName: "Friend Sruthi",
-                      memberProfilePicture: genericMemberURL)),
-                  child: MemberStatusChip(
-                      member: Member(
-                          memberName: "Friend Sruthi",
-                          memberProfilePicture: genericMemberURL)))
-            ],
+                          memberProfilePicture: genericMemberURL),
+                    )),
+                InkWell(
+                    onTap: () => addMemberFunction(
+                        Member(
+                            memberID: 2,
+                            memberName: "Friend Jane",
+                            memberProfilePicture: genericMemberURL),
+                        friendGroupProvider),
+                    child: MemberStatusChip(
+                        member: Member(
+                            memberID: 2,
+                            memberName: "Friend Jane",
+                            memberProfilePicture: genericMemberURL))),
+                InkWell(
+                    onTap: () => addMemberFunction(
+                        Member(
+                            memberID: 3,
+                            memberName: "Friend Malik",
+                            memberProfilePicture: genericMemberURL),
+                        friendGroupProvider),
+                    child: MemberStatusChip(
+                        member: Member(
+                            memberID: 3,
+                            memberName: "Friend Malik",
+                            memberProfilePicture: genericMemberURL))),
+                InkWell(
+                    onTap: () => addMemberFunction(
+                        Member(
+                            memberID: 4,
+                            memberName: "Friend Sruthi",
+                            memberProfilePicture: genericMemberURL),
+                        friendGroupProvider),
+                    child: MemberStatusChip(
+                        member: Member(
+                            memberID: 4,
+                            memberName: "Friend Sruthi",
+                            memberProfilePicture: genericMemberURL)))
+              ],
+            ),
           ),
           Text("Invite new friends"),
         ]));
@@ -309,4 +323,11 @@ class AddNewGroupPage extends StatefulWidget {
 
 class _AddNewGroupState extends State<AddNewGroupPage> {
   var groupName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 50,
+    );
+  }
 }

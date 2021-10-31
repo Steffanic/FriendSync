@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
 import 'package:friend_sync/group.dart';
+import 'package:friend_sync/providers.dart';
+import 'package:provider/provider.dart';
 
 const double IMAGE_MARGIN = 6.0;
 
 class MainPage extends StatefulWidget {
-  final List<Widget> friendGroups;
-
-  MainPage({required this.friendGroups});
-
   @override
   State<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
+  // ignore: unused_element
+  _MainPageState();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,13 +39,21 @@ class _MainPageState extends State<MainPage> {
                 flex: 2,
               ),
               Flexible(
-                child: Container(
-                  padding: EdgeInsets.all(24),
-                  margin: EdgeInsets.only(left: 32, right: 32),
-                  child: GridView.count(
-                    crossAxisSpacing: 25,
-                    crossAxisCount: 2,
-                    children: widget.friendGroups,
+                child: Consumer<FriendGroupProvider>(
+                  builder: (context, friendGroupProvider, child) => Container(
+                    padding: EdgeInsets.all(24),
+                    margin: EdgeInsets.only(left: 32, right: 32),
+                    child: GridView.count(
+                      crossAxisSpacing: 25,
+                      crossAxisCount: 2,
+                      children: [
+                        ...friendGroupProvider.friendGroups
+                            .map((groupState) =>
+                                FriendGroupCard(groupState: groupState))
+                            .toList(),
+                        AddNewGroupCard()
+                      ],
+                    ),
                   ),
                 ),
                 flex: 4,
@@ -147,18 +156,9 @@ class CurrentUserStatusCard extends StatelessWidget {
 }
 
 class FriendGroupCard extends StatelessWidget {
-  final String groupName;
-  final String groupTagline;
-  final String groupImageURL;
-  final int groupSize;
-  final bool favoriteGroup;
+  final GroupPageState groupState;
 
-  FriendGroupCard(
-      {this.groupName = "The Squad",
-      this.groupTagline = "We out here.",
-      this.groupImageURL = "https://i.imgur.com/cWgJmWt.jpg",
-      this.groupSize = 4,
-      this.favoriteGroup = false});
+  FriendGroupCard({required this.groupState});
 
   @override
   Widget build(BuildContext context) {
@@ -170,8 +170,7 @@ class FriendGroupCard extends StatelessWidget {
           // it passes the details about the group that was selected as arguments.
           onTap: () {
             Navigator.pushNamed(context, '/group',
-                arguments: GroupPageArguments(groupName, groupTagline,
-                    groupImageURL, groupSize, favoriteGroup));
+                arguments: groupState.groupID);
           },
           child: Container(
             height: 150,
@@ -207,7 +206,8 @@ class FriendGroupCard extends StatelessWidget {
                                   ),
                                   image: DecorationImage(
                                       fit: BoxFit.cover,
-                                      image: NetworkImage(groupImageURL)),
+                                      image: NetworkImage(
+                                          groupState.groupImageURL)),
                                   shape: BoxShape.circle,
                                 ), //Profile picture
                               )),
@@ -222,7 +222,7 @@ class FriendGroupCard extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
                                     children: [
-                                      (favoriteGroup
+                                      (groupState.favoriteGroup
                                           ? Icon(Icons.star,
                                               color: Colors.yellow)
                                           : Icon(Icons.star_border,
@@ -233,7 +233,8 @@ class FriendGroupCard extends StatelessWidget {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Expanded(
-                                                  child: Text("${groupSize}")),
+                                                  child: Text(
+                                                      "${groupState.groupSize}")),
                                               Icon(
                                                 Icons.person,
                                                 color: Colors.green,
@@ -249,7 +250,7 @@ class FriendGroupCard extends StatelessWidget {
                       margin: EdgeInsets.all(8),
                       child: FittedBox(
                           child: Text(
-                        groupName,
+                        groupState.groupName,
                         style: TextStyle(fontFamily: "Noto Sans"),
                       ))),
                 ),
@@ -266,27 +267,30 @@ class AddNewGroupCard extends StatelessWidget {
     return AspectRatio(
         aspectRatio: 1,
         child: InkWell(
-          // Tapping on a group page tile will bring you to a new group page
-          // it passes the details about the group that was selected as arguments.
-          onTap: () {
-            Navigator.pushNamed(context, '/add_new_group',);
-          },
-        child: Container(
-            margin: EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.white,
-                width: 4,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.purple[100],
-            ),
-            // Begin row
-            child: FittedBox(
-                fit: BoxFit.fill,
-                child: Icon(
-                  Icons.add_circle,
-                ))));
+            // Tapping on a group page tile will bring you to a new group page
+            // it passes the details about the group that was selected as arguments.
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/add_new_group',
+              );
+            },
+            child: Container(
+                margin: EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 4,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.purple[100],
+                ),
+                // Begin row
+                child: const FittedBox(
+                    fit: BoxFit.fill,
+                    child: Icon(
+                      Icons.add_circle,
+                    )))));
   }
 }
 
