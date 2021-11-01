@@ -1,13 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
+import 'package:friend_sync/forms.dart';
+import 'package:friend_sync/login.dart';
 import 'package:friend_sync/providers.dart';
+import 'package:friend_sync/settings.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'home.dart';
 import 'group.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
+}
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyApp createState() => _MyApp();
+}
+
+class _MyApp extends State<MyApp> {
+  final Future<FirebaseApp> _initialization = Firebase.initializeApp();
+
   @override
   Widget build(BuildContext context) {
     // ignore: unused_local_variable
@@ -32,19 +47,55 @@ class MyApp extends StatelessWidget {
       )
     ];
 
-    return ChangeNotifierProvider<FriendGroupProvider>(
-      create: (context) => FriendGroupProvider(friendGroups: friendGroups),
-      child: Consumer<FriendGroupProvider>(
-        builder: (context, friendGroupProvider, child) => MaterialApp(
-          title: "Friend Sync",
-          initialRoute: '/',
-          routes: {
-            '/': (context) => MainPage(),
-            '/group': (context) => GroupPage(),
-            '/add_new_group': (context) => AddNewGroupPage()
-          },
-        ),
-      ),
-    );
+    return FutureBuilder(
+        future: _initialization,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            print("There was an error");
+            return MaterialApp(
+                home: Scaffold(
+                    body: Container(
+              child: Text("Error!!!"),
+            )));
+          }
+
+          // Once complete, show your application
+          if (snapshot.connectionState == ConnectionState.done) {
+            FirebaseAuth auth = FirebaseAuth.instance;
+            bool isUserLoggedIn = false;
+
+            auth.userChanges().listen((User? user) {
+              print(user);
+              print(isUserLoggedIn);
+              if (user == null) {
+                isUserLoggedIn = false;
+              } else {
+                isUserLoggedIn = true;
+              }
+            });
+            return ChangeNotifierProvider<FriendGroupProvider>(
+              create: (context) =>
+                  FriendGroupProvider(friendGroups: friendGroups),
+              child: Consumer<FriendGroupProvider>(
+                builder: (context, friendGroupProvider, child) => MaterialApp(
+                  title: "Friend Sync",
+                  initialRoute: isUserLoggedIn ? '/' : '/login',
+                  routes: {
+                    '/': (context) => MainPage(),
+                    '/login': (context) => LogInPage(),
+                    '/group': (context) => GroupPage(),
+                    '/settings': (context) => SettingsPage(auth),
+                    '/add_new_group': (context) => AddNewGroupPage()
+                  },
+                ),
+              ),
+            );
+          }
+
+          return MaterialApp(
+              home: Container(
+            child: Text("Loading..."),
+          ));
+        });
   }
 }

@@ -1,16 +1,6 @@
-# friend_sync
+# FriendSync
 
-A new Flutter project.
+FriendSync makes getting your different friend and family circles together easy and stress-free. Start by making your friend groups and adding friends. Then, when you're ready get together, you or any of your friends can press the "Let's Hang Out" button at the top of your friend group's page. All the other members of that group will get a notification with a simple Yes or No. Now, the "Let's Hang Out" button has changed to a "Chat" button and you can coordinate where you'll go and what you'll do. Have fun with your friends!
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Thanks for checking out my project!

@@ -1,4 +1,4 @@
-package com.example.friend_sync
+package com.steffanic.friendsync
 
 import io.flutter.embedding.android.FlutterActivity
 

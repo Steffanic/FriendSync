@@ -67,6 +67,9 @@ class _MainPageState extends State<MainPage> {
     if (index == 0) {
       Navigator.popUntil(context, ModalRoute.withName('/'));
     }
+    if (index == 1) {
+      Navigator.pushNamed(context, "/settings");
+    }
   }
 }
 
