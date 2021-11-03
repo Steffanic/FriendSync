@@ -1,17 +1,79 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
+import 'package:friend_sync/forms.dart';
 import 'package:friend_sync/group.dart';
+import 'package:friend_sync/login.dart';
 import 'package:friend_sync/providers.dart';
+import 'package:friend_sync/settings.dart';
+import 'package:friend_sync/utility.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 const double IMAGE_MARGIN = 6.0;
+final FirebaseAuth _auth = FirebaseAuth.instance;
+
+class HomePage extends StatefulWidget {
+  List<GroupPageState> friendGroups;
+
+  final User? user;
+
+  HomePage({Key? key, this.friendGroups = const [], this.user})
+      : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool isUserLoggedIn = false;
+  final database = FirebaseDatabase.instance.reference();
+
+  @override
+  void initState() {
+    isUserLoggedIn = checkForLoggedInUser(context);
+
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isUserLoggedIn) {
+      return LogInPage();
+    }
+    // get friend groups from db
+    final friendGroupsRef = database
+        .child('friendGroups/0/groupName')
+        .get()
+        .then((value) => print(value.value));
+
+    return ChangeNotifierProvider<FriendGroupProvider>(
+        create: (context) =>
+            FriendGroupProvider(friendGroups: widget.friendGroups),
+        child: Consumer<FriendGroupProvider>(
+            builder: (context, friendGroupProvider, child) => MaterialApp(
+                  title: "Friend Sync",
+                  initialRoute: '/',
+                  routes: {
+                    '/': (context) => MainPage(),
+                    '/group': (context) => GroupPage(),
+                    '/settings': (context) => SettingsPage(),
+                    '/add_new_group': (context) => AddNewGroupPage()
+                  },
+                )));
+  }
+}
 
 class MainPage extends StatefulWidget {
+  MainPage({Key? key}) : super(key: key);
+
   @override
   State<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
+  bool isUserLoggedIn = false;
+
   // ignore: unused_element
   _MainPageState();
 
@@ -68,7 +130,8 @@ class _MainPageState extends State<MainPage> {
       Navigator.popUntil(context, ModalRoute.withName('/'));
     }
     if (index == 1) {
-      Navigator.pushNamed(context, "/settings");
+      Navigator.pushNamed(context, "/settings")
+          .then((value) => checkForLoggedInUser(context));
     }
   }
 }
@@ -173,7 +236,8 @@ class FriendGroupCard extends StatelessWidget {
           // it passes the details about the group that was selected as arguments.
           onTap: () {
             Navigator.pushNamed(context, '/group',
-                arguments: groupState.groupID);
+                    arguments: groupState.groupID)
+                .then((value) => checkForLoggedInUser(context));
           },
           child: Container(
             height: 150,
@@ -276,7 +340,7 @@ class AddNewGroupCard extends StatelessWidget {
               Navigator.pushNamed(
                 context,
                 '/add_new_group',
-              );
+              ).then((value) => checkForLoggedInUser(context));
             },
             child: Container(
                 margin: EdgeInsets.all(6),

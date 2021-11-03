@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:friend_sync/providers.dart';
+import 'package:friend_sync/utility.dart';
 import 'package:provider/provider.dart';
 
 const double IMAGE_MARGIN = 6.0;
@@ -22,6 +23,7 @@ class _GroupPageState extends State<GroupPage> {
 
   @override
   Widget build(BuildContext context) {
+    checkForLoggedInUser(context);
     if (!groupIDInit) {
       groupID = ModalRoute.of(context)!.settings.arguments as int;
       groupIDInit = true;
@@ -74,6 +76,10 @@ class _GroupPageState extends State<GroupPage> {
     if (index == 0) {
       Navigator.popUntil(context, ModalRoute.withName('/'));
     }
+    if (index == 1) {
+      Navigator.pushNamed(context, "/settings")
+          .then((value) => checkForLoggedInUser(context));
+    }
   }
 
   void _addMember(Member newMember, FriendGroupProvider friendGroupProvider) {
@@ -90,12 +96,7 @@ class _GroupPageState extends State<GroupPage> {
   }
 
   void _showToast(BuildContext context, String msg) {
-    final scaffold = ScaffoldMessenger.of(context);
-    scaffold.showSnackBar(
-      SnackBar(
-        content: Text(msg),
-      ),
-    );
+    showToast(context, msg);
   }
 }
 
@@ -326,8 +327,27 @@ class _AddNewGroupState extends State<AddNewGroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 50,
-    );
+    checkForLoggedInUser(context);
+    return Scaffold(
+        bottomNavigationBar: BottomNavigationBar(
+            onTap: _onItemTapped,
+            items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.settings), label: "Settings")
+            ]),
+        body: Container(
+          width: 50,
+        ));
+  }
+
+  void _onItemTapped(int index) {
+    if (index == 0) {
+      Navigator.popUntil(context, ModalRoute.withName('/'));
+    }
+    if (index == 1) {
+      Navigator.pushNamed(context, "/settings")
+          .then((value) => checkForLoggedInUser(context));
+    }
   }
 }

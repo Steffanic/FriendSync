@@ -62,33 +62,10 @@ class _MyApp extends State<MyApp> {
           // Once complete, show your application
           if (snapshot.connectionState == ConnectionState.done) {
             FirebaseAuth auth = FirebaseAuth.instance;
-            bool isUserLoggedIn = false;
 
-            auth.userChanges().listen((User? user) {
-              print(user);
-              print(isUserLoggedIn);
-              if (user == null) {
-                isUserLoggedIn = false;
-              } else {
-                isUserLoggedIn = true;
-              }
-            });
-            return ChangeNotifierProvider<FriendGroupProvider>(
-              create: (context) =>
-                  FriendGroupProvider(friendGroups: friendGroups),
-              child: Consumer<FriendGroupProvider>(
-                builder: (context, friendGroupProvider, child) => MaterialApp(
-                  title: "Friend Sync",
-                  initialRoute: isUserLoggedIn ? '/' : '/login',
-                  routes: {
-                    '/': (context) => MainPage(),
-                    '/login': (context) => LogInPage(),
-                    '/group': (context) => GroupPage(),
-                    '/settings': (context) => SettingsPage(auth),
-                    '/add_new_group': (context) => AddNewGroupPage()
-                  },
-                ),
-              ),
+            return HomePage(
+              friendGroups: friendGroups,
+              user: FirebaseAuth.instance.currentUser,
             );
           }
 

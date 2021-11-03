@@ -24,7 +24,6 @@ class GroupPageState {
       this.groupImageURL, this.groupSize, this.groupID, this.favoriteGroup);
 }
 
-
 class GroupPageArguments {
   final GroupPageState groupState;
 

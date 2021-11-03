@@ -9,7 +9,7 @@ class LogInPage extends StatelessWidget {
         body: Column(
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
+          children: const [
             Expanded(
               flex: 2,
               child: Text(

@@ -1,11 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:friend_sync/home.dart';
+import 'package:friend_sync/utility.dart';
 
 class SettingsPage extends StatefulWidget {
-  FirebaseAuth auth;
-  SettingsPage(this.auth);
-
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
@@ -13,6 +12,9 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
+    // Check if the user is logged in before building.
+    checkForLoggedInUser(context);
+
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
           onTap: _onItemTapped,
@@ -23,8 +25,13 @@ class _SettingsPageState extends State<SettingsPage> {
           ]),
       body: Container(
         child: ElevatedButton(
-          onPressed: () {
-            widget.auth.signOut();
+          onPressed: () async {
+            await FirebaseAuth.instance.signOut().then((_) {
+              return Navigator.push(context,
+                  MaterialPageRoute(builder: (context) {
+                return HomePage();
+              }));
+            });
           },
           child: Text("Log Out."),
         ),
