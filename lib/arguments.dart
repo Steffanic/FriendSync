@@ -11,6 +11,23 @@ class Member {
       this.memberProfilePicture = "https://i.imgur.com/cWgJmWt.jpg"});
 }
 
+class GroupMetaData {
+  String groupImageURL;
+  String groupName;
+  String groupTagline;
+  int groupID;
+  int groupSize;
+  bool isFavoriteGroup;
+
+  GroupMetaData(this.groupID, this.groupImageURL, this.groupName,
+      this.groupTagline, this.groupSize, this.isFavoriteGroup);
+
+  factory GroupMetaData.fromRTDB(int grpID, Map<String, dynamic> grpMD) {
+    return GroupMetaData(grpID, grpMD["groupImageURL"], grpMD["groupName"],
+        grpMD["groupTagline"], grpMD["groupSize"], grpMD["isFavoriteGroup"]);
+  }
+}
+
 class GroupPageState {
   List<Member> groupMembers;
   String groupName;

@@ -60,11 +60,13 @@ class _GroupPageState extends State<GroupPage> {
                   spacing: 12.0,
                   runSpacing: 12.0,
                   children: [
+                    /*
                     ...friendGroupProvider
                         .getGroupByID(groupID)
                         .groupMembers
                         .map((mem) => MemberStatusChip(member: mem))
-                        .toList(),
+                        .toList()*/
+                    MemberStatusChip(),
                     AddMemberCard(_addMember)
                   ],
                 ),
@@ -83,7 +85,7 @@ class _GroupPageState extends State<GroupPage> {
   }
 
   void _addMember(Member newMember, FriendGroupProvider friendGroupProvider) {
-    if (friendGroupProvider.isInGroup(newMember, groupID)) {
+    /*if (friendGroupProvider.isInGroup(newMember, groupID)) {
       _showToast(context, "They are already in your group!");
     } else {
       friendGroupProvider.addMember(groupID, newMember);
@@ -92,7 +94,7 @@ class _GroupPageState extends State<GroupPage> {
           newMember.memberName +
               " has been added to " +
               friendGroupProvider.getGroupByID(groupID).groupName);
-    }
+    }*/
   }
 
   void _showToast(BuildContext context, String msg) {
@@ -101,9 +103,9 @@ class _GroupPageState extends State<GroupPage> {
 }
 
 class GroupStatusCard extends StatelessWidget {
-  final GroupPageState groupState;
+  final GroupMetaData groupMetaData;
 
-  const GroupStatusCard(this.groupState, {Key? key}) : super(key: key);
+  const GroupStatusCard(this.groupMetaData, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +138,7 @@ class GroupStatusCard extends StatelessWidget {
                     width: 2,
                   ),
                   image: DecorationImage(
-                      image: NetworkImage(groupState.groupImageURL),
+                      image: NetworkImage(groupMetaData.groupImageURL),
                       fit: BoxFit.cover),
                   shape: BoxShape.circle,
                 ), //Profile picture
@@ -155,13 +157,13 @@ class GroupStatusCard extends StatelessWidget {
                         flex: 4,
                         child: FittedBox(
                             child: Text(
-                          groupState.groupName,
+                          groupMetaData.groupName,
                           textAlign: TextAlign.center,
                           style: TextStyle(fontFamily: "Noto Sans"),
                         ))),
                     Flexible(
                         flex: 2,
-                        child: Text(groupState.groupTagline,
+                        child: Text(groupMetaData.groupTagline,
                             textAlign: TextAlign.center,
                             style: TextStyle(fontFamily: "Noto Sans"))),
                   ],
@@ -176,7 +178,7 @@ class GroupStatusCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    (groupState.favoriteGroup
+                    (groupMetaData.isFavoriteGroup
                         ? Icon(Icons.star, color: Colors.yellow)
                         : Icon(Icons.star_border, color: Colors.white)),
                     Row(mainAxisSize: MainAxisSize.min, children: [
@@ -184,7 +186,7 @@ class GroupStatusCard extends StatelessWidget {
                           child: Consumer<FriendGroupProvider>(
                               builder: (context, friendGroupProvider, child) =>
                                   Text(
-                                      "${friendGroupProvider.friendGroups.where((grp) => grp.groupID == groupState.groupID).toList()[0].groupSize}"))),
+                                      "${friendGroupProvider.friendGroups.where((grp) => grp.groupID == groupMetaData.groupID).toList()[0].groupSize}"))),
                       Icon(
                         Icons.person,
                         color: Colors.green,

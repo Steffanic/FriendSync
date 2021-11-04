@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/ui/utils/stream_subscriber_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
 import 'package:friend_sync/forms.dart';
@@ -14,12 +17,9 @@ const double IMAGE_MARGIN = 6.0;
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class HomePage extends StatefulWidget {
-  List<GroupPageState> friendGroups;
-
   final User? user;
 
-  HomePage({Key? key, this.friendGroups = const [], this.user})
-      : super(key: key);
+  HomePage({Key? key, this.user}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -27,12 +27,15 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool isUserLoggedIn = false;
+  List<GroupMetaData>? groupMD;
+  List<GroupPageState> friendGroups;
   final database = FirebaseDatabase.instance.reference();
+
+  _HomePageState({this.friendGroups = const [], this.groupMD});
 
   @override
   void initState() {
     isUserLoggedIn = checkForLoggedInUser(context);
-
     super.initState();
   }
 
@@ -41,15 +44,10 @@ class _HomePageState extends State<HomePage> {
     if (!isUserLoggedIn) {
       return LogInPage();
     }
-    // get friend groups from db
-    final friendGroupsRef = database
-        .child('friendGroups/0/groupName')
-        .get()
-        .then((value) => print(value.value));
+    // get friend group metadata from db
 
     return ChangeNotifierProvider<FriendGroupProvider>(
-        create: (context) =>
-            FriendGroupProvider(friendGroups: widget.friendGroups),
+        create: (context) => FriendGroupProvider(),
         child: Consumer<FriendGroupProvider>(
             builder: (context, friendGroupProvider, child) => MaterialApp(
                   title: "Friend Sync",
@@ -110,8 +108,8 @@ class _MainPageState extends State<MainPage> {
                       crossAxisCount: 2,
                       children: [
                         ...friendGroupProvider.friendGroups
-                            .map((groupState) =>
-                                FriendGroupCard(groupState: groupState))
+                            .map((groupMetaData) =>
+                                FriendGroupCard(groupMetaData: groupMetaData))
                             .toList(),
                         AddNewGroupCard()
                       ],
@@ -222,9 +220,9 @@ class CurrentUserStatusCard extends StatelessWidget {
 }
 
 class FriendGroupCard extends StatelessWidget {
-  final GroupPageState groupState;
+  final GroupMetaData groupMetaData;
 
-  FriendGroupCard({required this.groupState});
+  FriendGroupCard({required this.groupMetaData});
 
   @override
   Widget build(BuildContext context) {
@@ -236,7 +234,7 @@ class FriendGroupCard extends StatelessWidget {
           // it passes the details about the group that was selected as arguments.
           onTap: () {
             Navigator.pushNamed(context, '/group',
-                    arguments: groupState.groupID)
+                    arguments: groupMetaData.groupID)
                 .then((value) => checkForLoggedInUser(context));
           },
           child: Container(
@@ -274,7 +272,7 @@ class FriendGroupCard extends StatelessWidget {
                                   image: DecorationImage(
                                       fit: BoxFit.cover,
                                       image: NetworkImage(
-                                          groupState.groupImageURL)),
+                                          groupMetaData.groupImageURL)),
                                   shape: BoxShape.circle,
                                 ), //Profile picture
                               )),
@@ -289,7 +287,7 @@ class FriendGroupCard extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
                                     children: [
-                                      (groupState.favoriteGroup
+                                      (groupMetaData.isFavoriteGroup
                                           ? Icon(Icons.star,
                                               color: Colors.yellow)
                                           : Icon(Icons.star_border,
@@ -301,7 +299,7 @@ class FriendGroupCard extends StatelessWidget {
                                             children: [
                                               Expanded(
                                                   child: Text(
-                                                      "${groupState.groupSize}")),
+                                                      "${groupMetaData.groupSize}")),
                                               Icon(
                                                 Icons.person,
                                                 color: Colors.green,
@@ -317,7 +315,7 @@ class FriendGroupCard extends StatelessWidget {
                       margin: EdgeInsets.all(8),
                       child: FittedBox(
                           child: Text(
-                        groupState.groupName,
+                        groupMetaData.groupName,
                         style: TextStyle(fontFamily: "Noto Sans"),
                       ))),
                 ),

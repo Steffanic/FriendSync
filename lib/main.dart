@@ -64,7 +64,6 @@ class _MyApp extends State<MyApp> {
             FirebaseAuth auth = FirebaseAuth.instance;
 
             return HomePage(
-              friendGroups: friendGroups,
               user: FirebaseAuth.instance.currentUser,
             );
           }
