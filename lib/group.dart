@@ -71,7 +71,7 @@ class _GroupPageState extends State<GroupPage> {
                         .getMemberList(groupID)
                         .map((mem) => MemberStatusChip(member: mem))
                         .toList(),
-                    AddMemberCard(_addMember)
+                    AddMemberCard(_addMember, groupID)
                   ],
                 ),
               ))
@@ -231,8 +231,9 @@ class MemberStatusChip extends StatelessWidget {
 
 class AddMemberCard extends StatelessWidget {
   final Function addMemberFunction;
+  final int groupID;
   // ignore: use_key_in_widget_constructors
-  const AddMemberCard(this.addMemberFunction);
+  const AddMemberCard(this.addMemberFunction, this.groupID);
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +241,7 @@ class AddMemberCard extends StatelessWidget {
         onTap: () => showDialog(
             context: context,
             builder: (BuildContext context) =>
-                Dialog(child: AddMemberDialog(addMemberFunction))),
+                Dialog(child: AddMemberDialog(addMemberFunction, groupID))),
         child: Chip(avatar: Icon(Icons.add), label: Text("Add a member!")));
   }
 }
@@ -249,8 +250,9 @@ class AddMemberDialog extends StatelessWidget {
   final Function addMemberFunction;
   final String genericMemberURL =
       "https://im4.ezgif.com/tmp/ezgif-4-cb158ea80934.gif";
+  final int groupID;
   // ignore: use_key_in_widget_constructors
-  const AddMemberDialog(this.addMemberFunction);
+  const AddMemberDialog(this.addMemberFunction, this.groupID);
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +265,12 @@ class AddMemberDialog extends StatelessWidget {
           Consumer<FriendGroupProvider>(
             builder: (context, friendGroupProvider, child) => Wrap(
               children: [
-                ...friendGroupProvider.currentGroupMemberList.map((mem) {
+                ...friendGroupProvider
+                    .getMemberByID(friendGroupProvider.getCurrentMemberID())
+                    .friendList
+                    .map((frndID) => friendGroupProvider.getMemberByID(frndID))
+                    .toList()
+                    .map((mem) {
                   return InkWell(
                       onTap: () => addMemberFunction(mem, friendGroupProvider),
                       child: MemberStatusChip(

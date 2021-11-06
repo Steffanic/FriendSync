@@ -5,12 +5,23 @@ class Member {
   final String memberEmail;
   final String memberProfilePicture;
   final String memberID; //Firebase User ID.
+  final List<String> friendList;
 
   const Member(
       {this.memberID = "0",
       this.memberName = "Patrick Steffanic",
       this.memberEmail = "email@gmail.com",
-      this.memberProfilePicture = "https://i.imgur.com/cWgJmWt.jpg"});
+      this.memberProfilePicture = "https://i.imgur.com/cWgJmWt.jpg",
+      this.friendList = const []});
+
+  factory Member.fromRTDB(String memID, Map<String, dynamic> memMap) {
+    return Member(
+        memberID: memID,
+        memberEmail: memMap['email'],
+        memberName: memMap['name'],
+        memberProfilePicture: memMap['profilePictureURL'],
+        friendList: List<String>.from(memMap['friendList']));
+  }
 }
 
 class GroupMetaData {

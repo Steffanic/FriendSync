@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
@@ -8,9 +9,9 @@ class FriendGroupProvider extends ChangeNotifier {
   List<GroupMetaData> friendGroups;
   List<List> memberLists;
   List<Member> members;
-  List<Member>
-      currentGroupMemberList; //When in the Group Page screen, this stores the members.
+
   final _db = FirebaseDatabase.instance.reference();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   static const FRIEND_GROUP_PATH = 'friendGroups';
   static const MEMBER_LIST_PATH = 'member_lists';
@@ -20,11 +21,11 @@ class FriendGroupProvider extends ChangeNotifier {
 
   late StreamSubscription<Event> _memberListStream;
 
-  FriendGroupProvider(
-      {this.friendGroups = const [],
-      this.memberLists = const [],
-      this.members = const [],
-      this.currentGroupMemberList = const []}) {
+  FriendGroupProvider({
+    this.friendGroups = const [],
+    this.memberLists = const [],
+    this.members = const [],
+  }) {
     _listenToFriendGroups();
     _listenToMembers();
     _listenToMemberLists();
@@ -42,6 +43,10 @@ class FriendGroupProvider extends ChangeNotifier {
 
   Member getMemberByID(String memberID) {
     return members.where((mem) => mem.memberID == memberID).toList()[0];
+  }
+
+  String getCurrentMemberID() {
+    return _auth.currentUser!.uid;
   }
 
   void _listenToFriendGroups() {
@@ -70,14 +75,10 @@ class FriendGroupProvider extends ChangeNotifier {
     var memberFuture = _db.child(MEMBER_PATH).onValue.listen((event) {
       var memberMap = Map<String, dynamic>.from(event.snapshot.value);
       members = memberMap.entries
-          .map((mem) => Member(
-              memberID: mem.key,
-              memberEmail: mem.value["email"],
-              memberName: mem.value['name'],
-              memberProfilePicture: mem.value['profilePictureURL']))
+          .map((mem) => Member.fromRTDB(mem.key, mem.value))
           .toList();
+      notifyListeners();
     });
-    notifyListeners();
   }
 
   @override
