@@ -22,12 +22,18 @@ class _GroupPageState extends State<GroupPage> {
   _GroupPageState();
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     checkForLoggedInUser(context);
     if (!groupIDInit) {
       groupID = ModalRoute.of(context)!.settings.arguments as int;
       groupIDInit = true;
     }
+
     return Scaffold(
         bottomNavigationBar: BottomNavigationBar(
             onTap: _onItemTapped,
@@ -48,9 +54,10 @@ class _GroupPageState extends State<GroupPage> {
                 //TODO: Pass group details as arguments to keep the state managed in a consistent way.
                 //
                 child: Consumer<FriendGroupProvider>(
-                    builder: (context, friendGroupProvider, child) =>
-                        GroupStatusCard(
-                            friendGroupProvider.getGroupByID(groupID))),
+                    builder: (context, friendGroupProvider, child) {
+                  return GroupStatusCard(
+                      friendGroupProvider.getGroupByID(groupID));
+                }),
                 flex: 2,
               ),
               Flexible(
@@ -60,13 +67,10 @@ class _GroupPageState extends State<GroupPage> {
                   spacing: 12.0,
                   runSpacing: 12.0,
                   children: [
-                    /*
                     ...friendGroupProvider
-                        .getGroupByID(groupID)
-                        .groupMembers
+                        .getMemberList(groupID)
                         .map((mem) => MemberStatusChip(member: mem))
-                        .toList()*/
-                    MemberStatusChip(),
+                        .toList(),
                     AddMemberCard(_addMember)
                   ],
                 ),
@@ -259,56 +263,13 @@ class AddMemberDialog extends StatelessWidget {
           Consumer<FriendGroupProvider>(
             builder: (context, friendGroupProvider, child) => Wrap(
               children: [
-                //Replace with access to some database of users
-                InkWell(
-                    onTap: () => addMemberFunction(
-                        Member(
-                            memberID: 1,
-                            memberName: "Friend Joe",
-                            memberProfilePicture: genericMemberURL),
-                        friendGroupProvider),
-                    child: MemberStatusChip(
-                      member: Member(
-                          memberID: 1,
-                          memberName: "Friend Joe",
-                          memberProfilePicture: genericMemberURL),
-                    )),
-                InkWell(
-                    onTap: () => addMemberFunction(
-                        Member(
-                            memberID: 2,
-                            memberName: "Friend Jane",
-                            memberProfilePicture: genericMemberURL),
-                        friendGroupProvider),
-                    child: MemberStatusChip(
-                        member: Member(
-                            memberID: 2,
-                            memberName: "Friend Jane",
-                            memberProfilePicture: genericMemberURL))),
-                InkWell(
-                    onTap: () => addMemberFunction(
-                        Member(
-                            memberID: 3,
-                            memberName: "Friend Malik",
-                            memberProfilePicture: genericMemberURL),
-                        friendGroupProvider),
-                    child: MemberStatusChip(
-                        member: Member(
-                            memberID: 3,
-                            memberName: "Friend Malik",
-                            memberProfilePicture: genericMemberURL))),
-                InkWell(
-                    onTap: () => addMemberFunction(
-                        Member(
-                            memberID: 4,
-                            memberName: "Friend Sruthi",
-                            memberProfilePicture: genericMemberURL),
-                        friendGroupProvider),
-                    child: MemberStatusChip(
-                        member: Member(
-                            memberID: 4,
-                            memberName: "Friend Sruthi",
-                            memberProfilePicture: genericMemberURL)))
+                ...friendGroupProvider.currentGroupMemberList.map((mem) {
+                  return InkWell(
+                      onTap: () => addMemberFunction(mem, friendGroupProvider),
+                      child: MemberStatusChip(
+                        member: mem,
+                      ));
+                })
               ],
             ),
           ),

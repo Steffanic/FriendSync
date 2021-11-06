@@ -229,97 +229,99 @@ class FriendGroupCard extends StatelessWidget {
     return AspectRatio(
         // Design decision to go with square tiles
         aspectRatio: 1,
-        child: InkWell(
-          // Tapping on a group page tile will bring you to a new group page
-          // it passes the details about the group that was selected as arguments.
-          onTap: () {
-            Navigator.pushNamed(context, '/group',
-                    arguments: groupMetaData.groupID)
-                .then((value) => checkForLoggedInUser(context));
-          },
-          child: Container(
-            height: 150,
-            margin: EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.white,
-                width: 4,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.purple[100],
-            ),
-            // Begin row
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                    flex: 5,
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Flexible(
-                              // This is the group's profile picture
-                              flex: 5,
-                              child: Container(
-                                margin: EdgeInsets.all(IMAGE_MARGIN),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
-                                  ),
-                                  image: DecorationImage(
-                                      fit: BoxFit.cover,
-                                      image: NetworkImage(
-                                          groupMetaData.groupImageURL)),
-                                  shape: BoxShape.circle,
-                                ), //Profile picture
-                              )),
-                          Flexible(
-                              // These are the favorite icon
-                              // and number of member icon
-                              flex: 2,
-                              child: Container(
-                                  margin:
-                                      const EdgeInsets.only(right: 6, top: 6),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      (groupMetaData.isFavoriteGroup
-                                          ? Icon(Icons.star,
-                                              color: Colors.yellow)
-                                          : Icon(Icons.star_border,
-                                              color: Colors.white)),
-                                      SizedBox(
-                                        width: 35,
-                                        child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Expanded(
-                                                  child: Text(
-                                                      "${groupMetaData.groupSize}")),
-                                              Icon(
-                                                Icons.person,
-                                                color: Colors.green,
-                                              ),
-                                            ]),
-                                      ),
-                                    ],
-                                  )))
-                        ])),
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                      margin: EdgeInsets.all(8),
-                      child: FittedBox(
-                          child: Text(
-                        groupMetaData.groupName,
-                        style: TextStyle(fontFamily: "Noto Sans"),
-                      ))),
+        child: Consumer<FriendGroupProvider>(
+          builder: (context, friendGroupProvider, child) => InkWell(
+            // Tapping on a group page tile will bring you to a new group page
+            // it passes the details about the group that was selected as arguments.
+            onTap: () {
+              Navigator.pushNamed(context, '/group',
+                      arguments: groupMetaData.groupID)
+                  .then((value) => checkForLoggedInUser(context));
+            },
+            child: Container(
+              height: 150,
+              margin: EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.white,
+                  width: 4,
                 ),
-              ],
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.purple[100],
+              ),
+              // Begin row
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                      flex: 5,
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Flexible(
+                                // This is the group's profile picture
+                                flex: 5,
+                                child: Container(
+                                  margin: EdgeInsets.all(IMAGE_MARGIN),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                    image: DecorationImage(
+                                        fit: BoxFit.cover,
+                                        image: NetworkImage(
+                                            groupMetaData.groupImageURL)),
+                                    shape: BoxShape.circle,
+                                  ), //Profile picture
+                                )),
+                            Flexible(
+                                // These are the favorite icon
+                                // and number of member icon
+                                flex: 2,
+                                child: Container(
+                                    margin:
+                                        const EdgeInsets.only(right: 6, top: 6),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        (groupMetaData.isFavoriteGroup
+                                            ? Icon(Icons.star,
+                                                color: Colors.yellow)
+                                            : Icon(Icons.star_border,
+                                                color: Colors.white)),
+                                        SizedBox(
+                                          width: 35,
+                                          child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Expanded(
+                                                    child: Text(
+                                                        "${groupMetaData.groupSize}")),
+                                                Icon(
+                                                  Icons.person,
+                                                  color: Colors.green,
+                                                ),
+                                              ]),
+                                        ),
+                                      ],
+                                    )))
+                          ])),
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                        margin: EdgeInsets.all(8),
+                        child: FittedBox(
+                            child: Text(
+                          groupMetaData.groupName,
+                          style: TextStyle(fontFamily: "Noto Sans"),
+                        ))),
+                  ),
+                ],
+              ),
             ),
           ),
         ));

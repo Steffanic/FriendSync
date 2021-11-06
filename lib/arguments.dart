@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 class Member {
   final String memberName;
+  final String memberEmail;
   final String memberProfilePicture;
-  final int memberID; //This ID only unique within a single group.
+  final String memberID; //Firebase User ID.
 
   const Member(
-      {this.memberID = 0,
+      {this.memberID = "0",
       this.memberName = "Patrick Steffanic",
+      this.memberEmail = "email@gmail.com",
       this.memberProfilePicture = "https://i.imgur.com/cWgJmWt.jpg"});
 }
 
