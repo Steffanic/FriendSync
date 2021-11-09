@@ -28,14 +28,14 @@ class GroupMetaData {
   String groupImageURL;
   String groupName;
   String groupTagline;
-  int groupID;
+  String groupID;
   int groupSize;
   bool isFavoriteGroup;
 
   GroupMetaData(this.groupID, this.groupImageURL, this.groupName,
       this.groupTagline, this.groupSize, this.isFavoriteGroup);
 
-  factory GroupMetaData.fromRTDB(int grpID, Map<String, dynamic> grpMD) {
+  factory GroupMetaData.fromRTDB(String grpID, Map<String, dynamic> grpMD) {
     return GroupMetaData(grpID, grpMD["groupImageURL"], grpMD["groupName"],
         grpMD["groupTagline"], grpMD["groupSize"], grpMD["isFavoriteGroup"]);
   }

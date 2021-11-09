@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:friend_sync/forms.dart';
 import 'package:friend_sync/providers.dart';
 import 'package:friend_sync/utility.dart';
 import 'package:provider/provider.dart';
@@ -8,8 +10,10 @@ import 'package:provider/provider.dart';
 const double IMAGE_MARGIN = 6.0;
 
 class GroupPage extends StatefulWidget {
+  final FirebaseAuth? auth;
   const GroupPage({
     Key? key,
+    this.auth,
   }) : super(key: key);
 
   @override
@@ -17,7 +21,7 @@ class GroupPage extends StatefulWidget {
 }
 
 class _GroupPageState extends State<GroupPage> {
-  late final int groupID;
+  late final String groupID;
   bool groupIDInit = false;
   _GroupPageState();
 
@@ -28,9 +32,9 @@ class _GroupPageState extends State<GroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    checkForLoggedInUser(context);
+    checkForLoggedInUser(context, widget.auth!);
     if (!groupIDInit) {
-      groupID = ModalRoute.of(context)!.settings.arguments as int;
+      groupID = ModalRoute.of(context)!.settings.arguments as String;
       groupIDInit = true;
     }
 
@@ -84,21 +88,21 @@ class _GroupPageState extends State<GroupPage> {
     }
     if (index == 1) {
       Navigator.pushNamed(context, "/settings")
-          .then((value) => checkForLoggedInUser(context));
+          .then((value) => checkForLoggedInUser(context, widget.auth!));
     }
   }
 
   void _addMember(Member newMember, FriendGroupProvider friendGroupProvider) {
-    /*if (friendGroupProvider.isInGroup(newMember, groupID)) {
+    if (friendGroupProvider.isInGroup(newMember, groupID)) {
       _showToast(context, "They are already in your group!");
     } else {
-      friendGroupProvider.addMember(groupID, newMember);
+      friendGroupProvider.addMemberToGroupRTDB(groupID, newMember);
       _showToast(
           context,
           newMember.memberName +
               " has been added to " +
               friendGroupProvider.getGroupByID(groupID).groupName);
-    }*/
+    }
   }
 
   void _showToast(BuildContext context, String msg) {
@@ -231,7 +235,7 @@ class MemberStatusChip extends StatelessWidget {
 
 class AddMemberCard extends StatelessWidget {
   final Function addMemberFunction;
-  final int groupID;
+  final String groupID;
   // ignore: use_key_in_widget_constructors
   const AddMemberCard(this.addMemberFunction, this.groupID);
 
@@ -250,7 +254,7 @@ class AddMemberDialog extends StatelessWidget {
   final Function addMemberFunction;
   final String genericMemberURL =
       "https://im4.ezgif.com/tmp/ezgif-4-cb158ea80934.gif";
-  final int groupID;
+  final String groupID;
   // ignore: use_key_in_widget_constructors
   const AddMemberDialog(this.addMemberFunction, this.groupID);
 
@@ -276,7 +280,7 @@ class AddMemberDialog extends StatelessWidget {
                       child: MemberStatusChip(
                         member: mem,
                       ));
-                })
+                }).toList()
               ],
             ),
           ),
@@ -294,10 +298,13 @@ class AddNewGroupPage extends StatefulWidget {
 
 class _AddNewGroupState extends State<AddNewGroupPage> {
   var groupName;
+  final FirebaseAuth? auth;
+
+  _AddNewGroupState({this.auth});
 
   @override
   Widget build(BuildContext context) {
-    checkForLoggedInUser(context);
+    checkForLoggedInUser(context, auth!);
     return Scaffold(
         bottomNavigationBar: BottomNavigationBar(
             onTap: _onItemTapped,
@@ -306,9 +313,7 @@ class _AddNewGroupState extends State<AddNewGroupPage> {
               BottomNavigationBarItem(
                   icon: Icon(Icons.settings), label: "Settings")
             ]),
-        body: Container(
-          width: 50,
-        ));
+        body: NewGroupFormPage());
   }
 
   void _onItemTapped(int index) {
@@ -317,7 +322,7 @@ class _AddNewGroupState extends State<AddNewGroupPage> {
     }
     if (index == 1) {
       Navigator.pushNamed(context, "/settings")
-          .then((value) => checkForLoggedInUser(context));
+          .then((value) => checkForLoggedInUser(context, auth!));
     }
   }
 }

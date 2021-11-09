@@ -5,6 +5,8 @@ import 'package:friend_sync/home.dart';
 import 'package:friend_sync/utility.dart';
 
 class SettingsPage extends StatefulWidget {
+  final FirebaseAuth? auth;
+  SettingsPage({this.auth});
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
@@ -13,7 +15,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     // Check if the user is logged in before building.
-    checkForLoggedInUser(context);
+    checkForLoggedInUser(context, widget.auth!);
 
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(

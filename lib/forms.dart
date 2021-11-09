@@ -1,13 +1,26 @@
+import 'dart:io';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:friend_sync/arguments.dart';
+import 'package:friend_sync/providers.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:friend_sync/home.dart';
 import 'package:friend_sync/utility.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:provider/provider.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
+final firebase_storage.FirebaseStorage _storage =
+    firebase_storage.FirebaseStorage.instance;
 
 // Define a custom Form widget.
 class LogInForm extends StatefulWidget {
-  const LogInForm({Key? key}) : super(key: key);
+  final FirebaseAuth? auth;
+  final DatabaseReference? db;
+  final firebase_storage.FirebaseStorage? storage;
+  const LogInForm({Key? key, this.auth, this.db, this.storage})
+      : super(key: key);
 
   @override
   LogInFormState createState() {
@@ -150,8 +163,12 @@ class LogInFormState extends State<LogInForm> {
             "User signed in with email: ${userCredential.user!.providerData[0].email}");
 
         user = userCredential.user;
-        Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => HomePage(user: user)));
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (context) => HomePage(
+                  auth: widget.auth,
+                  db: widget.db,
+                  storage: widget.storage,
+                )));
       } on FirebaseAuthException catch (e) {
         if (e.code == 'user-not-found') {
           print('No user found for that email.');
@@ -162,5 +179,200 @@ class LogInFormState extends State<LogInForm> {
         showToast(context, "${e.message}");
       }
     }
+  }
+}
+
+class NewGroupForm extends StatefulWidget {
+  const NewGroupForm({Key? key}) : super(key: key);
+
+  @override
+  NewGroupFormState createState() {
+    return NewGroupFormState();
+  }
+}
+
+class NewGroupFormState extends State<NewGroupForm> {
+  final _newGroupFormKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final taglineController = TextEditingController();
+  final pfpController = ImagePicker();
+
+  late final pfpImage;
+
+  Future getMyImage(ImageSource source) async {
+    final pickedImage = await pfpController.pickImage(source: source);
+    final pickedImageBytes = await pickedImage!.readAsBytes();
+    setState(() {
+      if (pickedImage != null) {
+        pfpImage = pickedImageBytes;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+
+    nameController.dispose();
+    taglineController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+        key: _newGroupFormKey,
+        child: Container(
+          //Container configuration begin
+          height: 150,
+          margin: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.white,
+              width: 4,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.purple[100],
+          ),
+          // Container configuration end
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Flexible(
+                      flex: 3,
+                      child: Text(
+                          "You have some important decisions to make! Have fun 😁")),
+                  //Group Picture
+                  Flexible(
+                      flex: 8,
+                      child: InkWell(
+                        onTap: () {
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) => Dialog(
+                                    child: Column(
+                                      children: [
+                                        Text("Upload a photo:"),
+                                        Row(
+                                          children: [
+                                            ElevatedButton(
+                                                onPressed: () {
+                                                  getMyImage(
+                                                      ImageSource.camera);
+                                                },
+                                                child: Row(children: const [
+                                                  Text("Take a Picture"),
+                                                  Icon(Icons.camera),
+                                                ])),
+                                            ElevatedButton(
+                                                onPressed: () {
+                                                  getMyImage(
+                                                      ImageSource.gallery);
+                                                },
+                                                child: Row(children: const [
+                                                  Text("Choose from Gallery"),
+                                                  Icon(Icons.photo),
+                                                ])),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ));
+                        },
+                        child: Container(
+                          height: 100,
+                          margin: EdgeInsets.all(IMAGE_MARGIN),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 2,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Icon(Icons.person_add),
+                          ), //Profile picture
+                        ),
+                      )),
+                  // Group name
+                  Flexible(
+                    flex: 6,
+                    child: Container(
+                        margin: EdgeInsets.all(6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              flex: 4,
+                              child: TextFormField(
+                                controller: nameController,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Please enter a name.";
+                                  }
+                                  return null;
+                                },
+                                decoration: const InputDecoration(
+                                  border: UnderlineInputBorder(),
+                                  labelText: 'Name your squad',
+                                ),
+                              ),
+                            ),
+                            Flexible(
+                                flex: 2,
+                                child: TextFormField(
+                                  controller: taglineController,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return "Please enter some banner text.";
+                                    }
+                                    return null;
+                                  },
+                                  decoration: const InputDecoration(
+                                    border: UnderlineInputBorder(),
+                                    labelText: 'Add some banner text!',
+                                  ),
+                                )),
+                          ],
+                        )),
+                  ),
+                ],
+              ),
+              Consumer<FriendGroupProvider>(
+                builder: (context, friendGroupProvider, child) =>
+                    ElevatedButton(
+                        onPressed: () {
+                          friendGroupProvider.addGroupToRTDB(
+                              friendGroupProvider.newGroupPhotoURL,
+                              nameController.text,
+                              taglineController.text,
+                              1,
+                              false,
+                              pfpImage);
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text("Make your new group!"),
+                        )),
+              )
+            ],
+          ),
+        ));
+  }
+}
+
+class NewGroupFormPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        home: Scaffold(
+      body: NewGroupForm(),
+    ));
   }
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
 import 'package:friend_sync/forms.dart';
@@ -7,6 +8,7 @@ import 'package:friend_sync/settings.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'home.dart';
 import 'group.dart';
 
@@ -61,10 +63,15 @@ class _MyApp extends State<MyApp> {
 
           // Once complete, show your application
           if (snapshot.connectionState == ConnectionState.done) {
-            FirebaseAuth auth = FirebaseAuth.instance;
+            FirebaseAuth _auth = FirebaseAuth.instance;
+            final _db = FirebaseDatabase.instance.reference();
+            final firebase_storage.FirebaseStorage _storage =
+                firebase_storage.FirebaseStorage.instance;
 
             return HomePage(
-              user: FirebaseAuth.instance.currentUser,
+              auth: _auth,
+              db: _db,
+              storage: _storage,
             );
           }
 

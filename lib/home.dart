@@ -12,14 +12,16 @@ import 'package:friend_sync/settings.dart';
 import 'package:friend_sync/utility.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 const double IMAGE_MARGIN = 6.0;
-final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class HomePage extends StatefulWidget {
-  final User? user;
+  final FirebaseAuth? auth;
+  final DatabaseReference? db;
+  final firebase_storage.FirebaseStorage? storage;
 
-  HomePage({Key? key, this.user}) : super(key: key);
+  HomePage({Key? key, this.auth, this.db, this.storage}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -29,31 +31,35 @@ class _HomePageState extends State<HomePage> {
   bool isUserLoggedIn = false;
   List<GroupMetaData>? groupMD;
   List<GroupPageState> friendGroups;
-  final database = FirebaseDatabase.instance.reference();
 
   _HomePageState({this.friendGroups = const [], this.groupMD});
 
   @override
   void initState() {
-    isUserLoggedIn = checkForLoggedInUser(context);
+    isUserLoggedIn = checkForLoggedInUser(context, widget.auth!);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     if (!isUserLoggedIn) {
-      return LogInPage();
+      return LogInPage(
+        auth: widget.auth,
+        db: widget.db,
+        storage: widget.storage,
+      );
     }
     // get friend group metadata from db
 
     return ChangeNotifierProvider<FriendGroupProvider>(
-        create: (context) => FriendGroupProvider(),
+        create: (context) => FriendGroupProvider(
+            auth: widget.auth, db: widget.db, storage: widget.storage),
         child: Consumer<FriendGroupProvider>(
             builder: (context, friendGroupProvider, child) => MaterialApp(
                   title: "Friend Sync",
                   initialRoute: '/',
                   routes: {
-                    '/': (context) => MainPage(),
+                    '/': (context) => MainPage(auth: widget.auth!),
                     '/group': (context) => GroupPage(),
                     '/settings': (context) => SettingsPage(),
                     '/add_new_group': (context) => AddNewGroupPage()
@@ -63,7 +69,8 @@ class _HomePageState extends State<HomePage> {
 }
 
 class MainPage extends StatefulWidget {
-  MainPage({Key? key}) : super(key: key);
+  final FirebaseAuth auth;
+  MainPage({Key? key, required this.auth}) : super(key: key);
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -108,10 +115,14 @@ class _MainPageState extends State<MainPage> {
                       crossAxisCount: 2,
                       children: [
                         ...friendGroupProvider.friendGroups
-                            .map((groupMetaData) =>
-                                FriendGroupCard(groupMetaData: groupMetaData))
+                            .map((groupMetaData) => FriendGroupCard(
+                                  groupMetaData: groupMetaData,
+                                  auth: widget.auth,
+                                ))
                             .toList(),
-                        AddNewGroupCard()
+                        AddNewGroupCard(
+                          auth: widget.auth,
+                        )
                       ],
                     ),
                   ),
@@ -129,7 +140,7 @@ class _MainPageState extends State<MainPage> {
     }
     if (index == 1) {
       Navigator.pushNamed(context, "/settings")
-          .then((value) => checkForLoggedInUser(context));
+          .then((value) => checkForLoggedInUser(context, widget.auth));
     }
   }
 }
@@ -221,8 +232,9 @@ class CurrentUserStatusCard extends StatelessWidget {
 
 class FriendGroupCard extends StatelessWidget {
   final GroupMetaData groupMetaData;
+  final FirebaseAuth auth;
 
-  FriendGroupCard({required this.groupMetaData});
+  FriendGroupCard({required this.groupMetaData, required this.auth});
 
   @override
   Widget build(BuildContext context) {
@@ -236,7 +248,7 @@ class FriendGroupCard extends StatelessWidget {
             onTap: () {
               Navigator.pushNamed(context, '/group',
                       arguments: groupMetaData.groupID)
-                  .then((value) => checkForLoggedInUser(context));
+                  .then((value) => checkForLoggedInUser(context, auth));
             },
             child: Container(
               height: 150,
@@ -264,19 +276,21 @@ class FriendGroupCard extends StatelessWidget {
                                 // This is the group's profile picture
                                 flex: 5,
                                 child: Container(
-                                  margin: EdgeInsets.all(IMAGE_MARGIN),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 2,
+                                    margin: EdgeInsets.all(IMAGE_MARGIN),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                      image: DecorationImage(
+                                          fit: BoxFit.cover,
+                                          image: NetworkImage(
+                                              groupMetaData.groupImageURL)),
+                                      shape: BoxShape.circle,
                                     ),
-                                    image: DecorationImage(
-                                        fit: BoxFit.cover,
-                                        image: NetworkImage(
-                                            groupMetaData.groupImageURL)),
-                                    shape: BoxShape.circle,
-                                  ), //Profile picture
-                                )),
+                                    child: Image.network(groupMetaData
+                                        .groupImageURL) //Profile picture
+                                    )),
                             Flexible(
                                 // These are the favorite icon
                                 // and number of member icon
@@ -329,6 +343,9 @@ class FriendGroupCard extends StatelessWidget {
 }
 
 class AddNewGroupCard extends StatelessWidget {
+  final FirebaseAuth auth;
+
+  AddNewGroupCard({required this.auth});
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
@@ -340,7 +357,7 @@ class AddNewGroupCard extends StatelessWidget {
               Navigator.pushNamed(
                 context,
                 '/add_new_group',
-              ).then((value) => checkForLoggedInUser(context));
+              ).then((value) => checkForLoggedInUser(context, auth));
             },
             child: Container(
                 margin: EdgeInsets.all(6),

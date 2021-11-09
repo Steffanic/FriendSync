@@ -1,17 +1,29 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
+import 'package:image_picker/image_picker.dart';
+
+class GroupNotFoundException implements Exception {
+  String groupID;
+  GroupNotFoundException(this.groupID);
+}
 
 class FriendGroupProvider extends ChangeNotifier {
-  List<GroupMetaData> friendGroups;
-  List<List> memberLists;
-  List<Member> members;
+  final FirebaseAuth? auth;
+  final DatabaseReference? db;
+  final firebase_storage.FirebaseStorage? storage;
 
-  final _db = FirebaseDatabase.instance.reference();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  List<GroupMetaData> friendGroups;
+  late Map<String, List> memberLists = {};
+  List<Member> members;
+  String newGroupID;
+  String newGroupPhotoURL;
 
   static const FRIEND_GROUP_PATH = 'friendGroups';
   static const MEMBER_LIST_PATH = 'member_lists';
@@ -22,23 +34,33 @@ class FriendGroupProvider extends ChangeNotifier {
   late StreamSubscription<Event> _memberListStream;
 
   FriendGroupProvider({
+    this.auth,
+    this.db,
+    this.storage,
     this.friendGroups = const [],
-    this.memberLists = const [],
     this.members = const [],
+    this.newGroupID = "",
+    this.newGroupPhotoURL = "",
   }) {
     _listenToFriendGroups();
     _listenToMembers();
     _listenToMemberLists();
   }
 
-  GroupMetaData getGroupByID(int groupID) {
-    return friendGroups.where((grp) => grp.groupID == groupID).toList()[0];
+  GroupMetaData getGroupByID(String groupID) {
+    final grpOrEmpty =
+        friendGroups.where((grp) => grp.groupID == groupID).toList();
+    if (grpOrEmpty.isEmpty) {
+      throw GroupNotFoundException(groupID);
+    } else {
+      return grpOrEmpty[0];
+    }
   }
 
-  List getMemberList(int groupID) {
+  List<Member> getMemberList(String groupID) {
     return memberLists.isEmpty
         ? []
-        : memberLists[groupID].map((memID) => getMemberByID(memID)).toList();
+        : memberLists[groupID]!.map((memID) => getMemberByID(memID)).toList();
   }
 
   Member getMemberByID(String memberID) {
@@ -46,39 +68,55 @@ class FriendGroupProvider extends ChangeNotifier {
   }
 
   String getCurrentMemberID() {
-    return _auth.currentUser!.uid;
+    return auth!.currentUser!.uid;
   }
 
   void _listenToFriendGroups() {
-    _friendGroupStream = _db.child(FRIEND_GROUP_PATH).onValue.listen((event) {
-      friendGroups = event.snapshot.value
-          .map((grp) {
-            Map<String, dynamic> gMD = Map<String, dynamic>.from(grp);
-            return GroupMetaData.fromRTDB(
-                (event.snapshot.value).indexOf(grp), gMD);
-          })
-          .toList()
-          .cast<GroupMetaData>();
-      print(friendGroups);
-      notifyListeners();
-    });
+    try {
+      _friendGroupStream = db!.child(FRIEND_GROUP_PATH).onValue.listen((event) {
+        friendGroups = Map<String, dynamic>.from(event.snapshot.value)
+            .entries
+            .map((grp) {
+              Map<String, dynamic> gMD = Map<String, dynamic>.from(grp.value);
+              return GroupMetaData.fromRTDB(grp.key, gMD);
+            })
+            .toList()
+            .cast<GroupMetaData>();
+        print(friendGroups);
+        notifyListeners();
+      });
+    } catch (e) {
+      print("$e occurred!");
+    }
   }
 
   void _listenToMemberLists() {
-    _memberListStream = _db.child(MEMBER_LIST_PATH).onValue.listen((event) {
-      memberLists = [...event.snapshot.value];
-      notifyListeners();
-    });
+    try {
+      _memberListStream = db!.child(MEMBER_LIST_PATH).onValue.listen((event) {
+        var listOfMembers = event.snapshot.value;
+        listOfMembers.map((String key, value) {
+          memberLists.putIfAbsent(key, () => value);
+          return MapEntry(key, value);
+        });
+        notifyListeners();
+      });
+    } catch (e) {
+      print("Oh damn, son! $e went down.");
+    }
   }
 
   void _listenToMembers() {
-    var memberFuture = _db.child(MEMBER_PATH).onValue.listen((event) {
-      var memberMap = Map<String, dynamic>.from(event.snapshot.value);
-      members = memberMap.entries
-          .map((mem) => Member.fromRTDB(mem.key, mem.value))
-          .toList();
-      notifyListeners();
-    });
+    try {
+      var memberFuture = db!.child(MEMBER_PATH).onValue.listen((event) {
+        var memberMap = Map<String, dynamic>.from(event.snapshot.value);
+        members = memberMap.entries
+            .map((mem) => Member.fromRTDB(mem.key, mem.value))
+            .toList();
+        notifyListeners();
+      });
+    } catch (e) {
+      print("$e has occurred!");
+    }
   }
 
   @override
@@ -87,27 +125,78 @@ class FriendGroupProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  /*bool isInGroup(Member newMember, int groupID) {
-    var group = friendGroups.where((grp) => grp.groupID == groupID).toList()[0];
-    if (group.groupMembers
+  bool isInGroup(Member newMember, String groupID) {
+    List<Member> currentMemberList = getMemberList(groupID);
+    if (currentMemberList
         .where((mem) => mem.memberID == newMember.memberID)
         .isEmpty) {
       return false;
     } else {
       return true;
     }
-  }*/
+  }
 
-  void addGroup(GroupMetaData groupMetaData) {
-    friendGroups = <GroupMetaData>[...friendGroups, groupMetaData];
+  void addGroupToRTDB(
+      String groupImageURL,
+      String groupName,
+      String groupTagline,
+      int groupSize,
+      bool isFavoriteGroup,
+      Uint8List file) {
+    DatabaseReference friendGroupRef = db!.child(FRIEND_GROUP_PATH).push();
+    newGroupID = friendGroupRef.key;
+    uploadGroupPhoto(file, newGroupID);
+    friendGroupRef.set({
+      'groupName': groupName,
+      'groupTagline': groupTagline,
+      'groupImageURL': groupImageURL,
+      'groupSize': groupSize,
+      'isFavoriteGroup': isFavoriteGroup
+    });
+
+    DatabaseReference memberListRef =
+        db!.child(MEMBER_LIST_PATH).child(newGroupID);
+    memberListRef.update({'0': auth!.currentUser!.uid});
+
     notifyListeners();
   }
 
-  /*void addMember(int groupID, Member newMember) {
-    GroupPageState group = getGroupByID(groupID);
-    print(group);
-    group.groupMembers = [...group.groupMembers, newMember];
-    group.groupSize = group.groupMembers.length;
+  Future<void> uploadGroupPhoto(Uint8List file, String groupID) async {
+    try {
+      var groupPhotoRef = firebase_storage.FirebaseStorage.instance
+          .ref('groupPhotos/')
+          .child("$groupID.png");
+
+      await groupPhotoRef.putData(file);
+      newGroupPhotoURL = await groupPhotoRef.getDownloadURL();
+      notifyListeners();
+
+      // ignore: nullable_type_in_catch_clause
+    } on FirebaseException catch (e) {
+      print(e);
+    }
+  }
+
+  void addMemberToGroupRTDB(String groupID, Member newMember) {
+    // This function should add the newMember's ID to the list of members in
+    // the group with ID groupID. Maybe it should also check to see if the member is in the members table in the DB.
+
+    //
+    // if(newMember not in "members/" table) {
+    //   add NewMember to "members/" table;
+    // }
+    //
+
+    // To add a member to a group's member list in the DB, pull a reference to the member_lists table and the specified groupID. Then call update with the new list.
+
+    DatabaseReference memberListReference =
+        db!.child(MEMBER_LIST_PATH + '/$groupID');
+    int memberListLength;
+    memberListReference
+        .get()
+        .then((snapshot) => memberListLength = snapshot.value.entries.length);
+    memberListReference
+        .update({'${getMemberList(groupID).length}': newMember.memberID});
     notifyListeners();
-  }*/
+  }
 }
