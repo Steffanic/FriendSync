@@ -14,13 +14,25 @@ class GroupNotFoundException implements Exception {
   GroupNotFoundException(this.groupID);
 }
 
+class MemberListNotFoundException implements Exception {
+  String groupID;
+  MemberListNotFoundException(this.groupID);
+}
+
+class MemberNotFoundException implements Exception {
+  String memberID;
+  MemberNotFoundException(this.memberID);
+}
+
+class MemberListEmptyException implements Exception {}
+
 class FriendGroupProvider extends ChangeNotifier {
   final FirebaseAuth? auth;
   final DatabaseReference? db;
   final firebase_storage.FirebaseStorage? storage;
 
   List<GroupMetaData> friendGroups;
-  late Map<String, List> memberLists = {};
+  late Map<String, List<String>> memberLists = {};
   List<Member> members;
   String newGroupID;
   String newGroupPhotoURL;
@@ -57,14 +69,28 @@ class FriendGroupProvider extends ChangeNotifier {
     }
   }
 
-  List<Member> getMemberList(String groupID) {
-    return memberLists.isEmpty
-        ? []
-        : memberLists[groupID]!.map((memID) => getMemberByID(memID)).toList();
+  List<String> getMemberList(String groupID) {
+    try {
+      return memberLists.isEmpty
+          ? throw MemberListEmptyException()
+          : memberLists[groupID]!;
+    } catch (e) {
+      print("$e done did happened.");
+      if (e.runtimeType == MemberListEmptyException) {
+        rethrow;
+      }
+      throw MemberListNotFoundException(groupID);
+    }
   }
 
   Member getMemberByID(String memberID) {
-    return members.where((mem) => mem.memberID == memberID).toList()[0];
+    final memberOrEmpty =
+        members.where((mem) => mem.memberID == memberID).toList();
+    if (memberOrEmpty.isEmpty) {
+      throw MemberNotFoundException(memberID);
+    } else {
+      return memberOrEmpty[0];
+    }
   }
 
   String getCurrentMemberID() {
@@ -86,7 +112,7 @@ class FriendGroupProvider extends ChangeNotifier {
         notifyListeners();
       });
     } catch (e) {
-      print("$e occurred!");
+      print("You should be testing if this is a cast error $e");
     }
   }
 
@@ -101,7 +127,7 @@ class FriendGroupProvider extends ChangeNotifier {
         notifyListeners();
       });
     } catch (e) {
-      print("Oh damn, son! $e went down.");
+      print("You should be testing if this is a cast error $e");
     }
   }
 
@@ -115,7 +141,7 @@ class FriendGroupProvider extends ChangeNotifier {
         notifyListeners();
       });
     } catch (e) {
-      print("$e has occurred!");
+      print("You should be testing if this is a cast error $e");
     }
   }
 
@@ -126,7 +152,8 @@ class FriendGroupProvider extends ChangeNotifier {
   }
 
   bool isInGroup(Member newMember, String groupID) {
-    List<Member> currentMemberList = getMemberList(groupID);
+    List<Member> currentMemberList =
+        getMemberList(groupID).map((memID) => getMemberByID(memID)).toList();
     if (currentMemberList
         .where((mem) => mem.memberID == newMember.memberID)
         .isEmpty) {

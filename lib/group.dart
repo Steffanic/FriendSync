@@ -73,7 +73,8 @@ class _GroupPageState extends State<GroupPage> {
                   children: [
                     ...friendGroupProvider
                         .getMemberList(groupID)
-                        .map((mem) => MemberStatusChip(member: mem))
+                        .map((memID) => MemberStatusChip(
+                            member: friendGroupProvider.getMemberByID(memID)))
                         .toList(),
                     AddMemberCard(_addMember, groupID)
                   ],
