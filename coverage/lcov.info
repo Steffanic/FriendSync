@@ -1,4 +1,4 @@
-SF:lib\arguments.dart
+SF:lib/arguments.dart
 DA:10,1
 DA:17,0
 DA:18,0
@@ -15,7 +15,7 @@ DA:60,0
 LF:13
 LH:2
 end_of_record
-SF:lib\home.dart
+SF:lib/home.dart
 DA:24,0
 DA:26,0
 DA:27,0
@@ -168,7 +168,7 @@ DA:394,0
 LF:149
 LH:0
 end_of_record
-SF:lib\providers.dart
+SF:lib/providers.dart
 DA:14,1
 DA:19,1
 DA:24,0
@@ -257,7 +257,7 @@ DA:227,0
 LF:85
 LH:28
 end_of_record
-SF:lib\forms.dart
+SF:lib/forms.dart
 DA:13,0
 DA:14,0
 DA:22,0
@@ -407,7 +407,7 @@ DA:375,0
 LF:146
 LH:0
 end_of_record
-SF:lib\utility.dart
+SF:lib/utility.dart
 DA:5,0
 DA:6,0
 DA:12,0
@@ -418,7 +418,7 @@ DA:16,0
 LF:7
 LH:0
 end_of_record
-SF:lib\group.dart
+SF:lib/group.dart
 DA:14,0
 DA:17,0
 DA:19,0
@@ -565,7 +565,7 @@ DA:326,0
 LF:143
 LH:0
 end_of_record
-SF:lib\login.dart
+SF:lib/login.dart
 DA:17,0
 DA:19,0
 DA:21,0
@@ -577,7 +577,7 @@ DA:42,0
 LF:8
 LH:0
 end_of_record
-SF:lib\settings.dart
+SF:lib/settings.dart
 DA:9,0
 DA:10,0
 DA:11,0

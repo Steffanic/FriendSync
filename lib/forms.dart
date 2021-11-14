@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:friend_sync/arguments.dart';
 import 'package:friend_sync/providers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,10 +7,6 @@ import 'package:friend_sync/home.dart';
 import 'package:friend_sync/utility.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:provider/provider.dart';
-
-final FirebaseAuth _auth = FirebaseAuth.instance;
-final firebase_storage.FirebaseStorage _storage =
-    firebase_storage.FirebaseStorage.instance;
 
 // Define a custom Form widget.
 class LogInForm extends StatefulWidget {
@@ -53,7 +47,7 @@ class LogInFormState extends State<LogInForm> {
 
   @override
   void initState() {
-    _auth.userChanges().listen(
+    widget.auth!.userChanges().listen(
           (event) => setState(() => user = event),
         );
     super.initState();
@@ -349,7 +343,6 @@ class NewGroupFormState extends State<NewGroupForm> {
                     ElevatedButton(
                         onPressed: () {
                           friendGroupProvider.addGroupToRTDB(
-                              friendGroupProvider.newGroupPhotoURL,
                               nameController.text,
                               taglineController.text,
                               1,

@@ -76,7 +76,7 @@ void main() {
 
       String groupID = "KnownID";
 
-      List<String>? memList;
+      List<dynamic>? memList;
 
       //Act
       try {
@@ -85,7 +85,7 @@ void main() {
         print("Member list is empty.");
 
         //Assert
-        expect(e.runtimeType, MemberListEmptyException);
+        expect(e, MemberListEmptyException);
       }
 
       expect(memList, null);
@@ -101,7 +101,7 @@ void main() {
       });
       fgp.memberLists = prototypeMemberList;
       String groupID = "WrongID";
-      List<String>? memList;
+      List<dynamic>? memList;
 
       //Act
       try {
@@ -126,7 +126,7 @@ void main() {
       });
       fgp.memberLists = prototypeMemberList;
       String groupID = "groupID";
-      List<String>? memList;
+      List<dynamic>? memList;
 
       //Act
       try {

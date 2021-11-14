@@ -32,7 +32,7 @@ class FriendGroupProvider extends ChangeNotifier {
   final firebase_storage.FirebaseStorage? storage;
 
   List<GroupMetaData> friendGroups;
-  late Map<String, List<String>> memberLists = {};
+  late Map<String, List<dynamic>> memberLists = {};
   List<Member> members;
   String newGroupID;
   String newGroupPhotoURL;
@@ -60,6 +60,7 @@ class FriendGroupProvider extends ChangeNotifier {
   }
 
   GroupMetaData getGroupByID(String groupID) {
+    updateGroupSize(groupID);
     final grpOrEmpty =
         friendGroups.where((grp) => grp.groupID == groupID).toList();
     if (grpOrEmpty.isEmpty) {
@@ -69,7 +70,7 @@ class FriendGroupProvider extends ChangeNotifier {
     }
   }
 
-  List<String> getMemberList(String groupID) {
+  List<dynamic> getMemberList(String groupID) {
     try {
       return memberLists.isEmpty
           ? throw MemberListEmptyException()
@@ -119,11 +120,10 @@ class FriendGroupProvider extends ChangeNotifier {
   void _listenToMemberLists() {
     try {
       _memberListStream = db!.child(MEMBER_LIST_PATH).onValue.listen((event) {
-        var listOfMembers = event.snapshot.value;
-        listOfMembers.map((String key, value) {
-          memberLists.putIfAbsent(key, () => value);
-          return MapEntry(key, value);
-        });
+        var listOfMembers =
+            Map<String, List<dynamic>>.from(event.snapshot.value);
+        print(listOfMembers.values);
+        memberLists = listOfMembers;
         notifyListeners();
       });
     } catch (e) {
@@ -163,20 +163,14 @@ class FriendGroupProvider extends ChangeNotifier {
     }
   }
 
-  void addGroupToRTDB(
-      String groupImageURL,
-      String groupName,
-      String groupTagline,
-      int groupSize,
-      bool isFavoriteGroup,
-      Uint8List file) {
+  Future<void> addGroupToRTDB(String groupName, String groupTagline,
+      int groupSize, bool isFavoriteGroup, Uint8List file) async {
     DatabaseReference friendGroupRef = db!.child(FRIEND_GROUP_PATH).push();
     newGroupID = friendGroupRef.key;
-    uploadGroupPhoto(file, newGroupID);
     friendGroupRef.set({
       'groupName': groupName,
       'groupTagline': groupTagline,
-      'groupImageURL': groupImageURL,
+      'groupImageURL': await uploadGroupPhoto(file, newGroupID),
       'groupSize': groupSize,
       'isFavoriteGroup': isFavoriteGroup
     });
@@ -188,19 +182,18 @@ class FriendGroupProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> uploadGroupPhoto(Uint8List file, String groupID) async {
+  Future<String> uploadGroupPhoto(Uint8List file, String groupID) async {
     try {
       var groupPhotoRef = firebase_storage.FirebaseStorage.instance
           .ref('groupPhotos/')
           .child("$groupID.png");
 
       await groupPhotoRef.putData(file);
-      newGroupPhotoURL = await groupPhotoRef.getDownloadURL();
-      notifyListeners();
-
+      return groupPhotoRef.getDownloadURL();
       // ignore: nullable_type_in_catch_clause
     } on FirebaseException catch (e) {
       print(e);
+      rethrow;
     }
   }
 
@@ -224,6 +217,22 @@ class FriendGroupProvider extends ChangeNotifier {
         .then((snapshot) => memberListLength = snapshot.value.entries.length);
     memberListReference
         .update({'${getMemberList(groupID).length}': newMember.memberID});
+
+    updateGroupSize(groupID);
     notifyListeners();
+  }
+
+  void updateGroupSize(String groupID) {
+    DatabaseReference memberCountReference =
+        db!.child(FRIEND_GROUP_PATH).child(groupID).child("groupSize");
+    memberCountReference.set(getMemberList(groupID).length);
+  }
+
+  void toggleFavoriteGroup(String groupID) {
+    DatabaseReference favoriteGroupReference =
+        db!.child(FRIEND_GROUP_PATH).child(groupID).child("isFavoriteGroup");
+    favoriteGroupReference
+        .get()
+        .then((value) => favoriteGroupReference.set(!value.value));
   }
 }

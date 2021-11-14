@@ -64,22 +64,29 @@ class _GroupPageState extends State<GroupPage> {
                 }),
                 flex: 2,
               ),
-              Flexible(
-                  child: Consumer<FriendGroupProvider>(
-                builder: (context, friendGroupProvider, child) => Wrap(
+              Flexible(child: Consumer<FriendGroupProvider>(
+                  builder: (context, friendGroupProvider, child) {
+                var memberChips;
+                try {
+                  memberChips = friendGroupProvider
+                      .getMemberList(groupID)
+                      .map((memID) => MemberStatusChip(
+                          member: friendGroupProvider.getMemberByID(memID)))
+                      .toList();
+                } catch (e) {
+                  print("$e");
+                  memberChips = [];
+                } finally {}
+                return Wrap(
                   direction: Axis.horizontal,
                   spacing: 12.0,
                   runSpacing: 12.0,
                   children: [
-                    ...friendGroupProvider
-                        .getMemberList(groupID)
-                        .map((memID) => MemberStatusChip(
-                            member: friendGroupProvider.getMemberByID(memID)))
-                        .toList(),
+                    ...memberChips,
                     AddMemberCard(_addMember, groupID)
                   ],
-                ),
-              ))
+                );
+              }))
             ])));
   }
 
@@ -182,26 +189,34 @@ class GroupStatusCard extends StatelessWidget {
               flex: 1,
               child: Container(
                 margin: EdgeInsets.all(6),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    (groupMetaData.isFavoriteGroup
-                        ? Icon(Icons.star, color: Colors.yellow)
-                        : Icon(Icons.star_border, color: Colors.white)),
-                    Row(mainAxisSize: MainAxisSize.min, children: [
-                      Expanded(
-                          child: Consumer<FriendGroupProvider>(
-                              builder: (context, friendGroupProvider, child) =>
-                                  Text(
-                                      "${friendGroupProvider.friendGroups.where((grp) => grp.groupID == groupMetaData.groupID).toList()[0].groupSize}"))),
-                      Icon(
-                        Icons.person,
-                        color: Colors.green,
-                      ),
-                    ]),
-                  ],
+                child: Consumer<FriendGroupProvider>(
+                  builder: (context, friendGroupProvider, child) => Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      InkWell(
+                          onTap: () {
+                            friendGroupProvider
+                                .toggleFavoriteGroup(groupMetaData.groupID);
+                          },
+                          child: (groupMetaData.isFavoriteGroup
+                              ? Icon(Icons.star, color: Colors.yellow)
+                              : Icon(Icons.star_border, color: Colors.white))),
+                      Row(mainAxisSize: MainAxisSize.min, children: [
+                        Expanded(
+                            child: Consumer<FriendGroupProvider>(
+                                builder: (context, friendGroupProvider,
+                                        child) =>
+                                    Text(
+                                        "${friendGroupProvider.friendGroups.where((grp) => grp.groupID == groupMetaData.groupID).toList()[0].groupSize}"))),
+                        Icon(
+                          Icons.person,
+                          color: Colors.green,
+                        ),
+                      ]),
+                    ],
+                  ),
                 ),
               )),
         ],
@@ -261,37 +276,39 @@ class AddMemberDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-          Text("Add existing friends:"),
-          Consumer<FriendGroupProvider>(
-            builder: (context, friendGroupProvider, child) => Wrap(
-              children: [
-                ...friendGroupProvider
-                    .getMemberByID(friendGroupProvider.getCurrentMemberID())
-                    .friendList
-                    .map((frndID) => friendGroupProvider.getMemberByID(frndID))
-                    .toList()
-                    .map((mem) {
-                  return InkWell(
-                      onTap: () => addMemberFunction(mem, friendGroupProvider),
-                      child: MemberStatusChip(
-                        member: mem,
-                      ));
-                }).toList()
-              ],
-            ),
-          ),
-          Text("Invite new friends"),
-        ]));
+    return Consumer<FriendGroupProvider>(
+        builder: (context, friendGroupProvider, child) => Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text("Add existing friends:"),
+                  Wrap(
+                    children: [
+                      ...friendGroupProvider
+                          .getMemberByID(
+                              friendGroupProvider.getCurrentMemberID())
+                          .friendList
+                          .map((frndID) =>
+                              friendGroupProvider.getMemberByID(frndID))
+                          .toList()
+                          .map((mem) {
+                        return InkWell(
+                            onTap: () =>
+                                addMemberFunction(mem, friendGroupProvider),
+                            child: MemberStatusChip(
+                              member: mem,
+                            ));
+                      }).toList()
+                    ],
+                  ),
+                  const Text("Invite new friends"),
+                ]));
   }
 }
 
 class AddNewGroupPage extends StatefulWidget {
-  const AddNewGroupPage({Key? key}) : super(key: key);
+  final FirebaseAuth? auth;
+  const AddNewGroupPage({Key? key, this.auth}) : super(key: key);
 
   @override
   _AddNewGroupState createState() => _AddNewGroupState();
@@ -299,13 +316,12 @@ class AddNewGroupPage extends StatefulWidget {
 
 class _AddNewGroupState extends State<AddNewGroupPage> {
   var groupName;
-  final FirebaseAuth? auth;
 
-  _AddNewGroupState({this.auth});
+  _AddNewGroupState();
 
   @override
   Widget build(BuildContext context) {
-    checkForLoggedInUser(context, auth!);
+    checkForLoggedInUser(context, widget.auth!);
     return Scaffold(
         bottomNavigationBar: BottomNavigationBar(
             onTap: _onItemTapped,
@@ -323,7 +339,7 @@ class _AddNewGroupState extends State<AddNewGroupPage> {
     }
     if (index == 1) {
       Navigator.pushNamed(context, "/settings")
-          .then((value) => checkForLoggedInUser(context, auth!));
+          .then((value) => checkForLoggedInUser(context, widget.auth!));
     }
   }
 }

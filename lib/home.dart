@@ -60,9 +60,14 @@ class _HomePageState extends State<HomePage> {
                   initialRoute: '/',
                   routes: {
                     '/': (context) => MainPage(auth: widget.auth!),
-                    '/group': (context) => GroupPage(),
-                    '/settings': (context) => SettingsPage(),
-                    '/add_new_group': (context) => AddNewGroupPage()
+                    '/group': (context) => GroupPage(
+                          auth: widget.auth!,
+                        ),
+                    '/settings': (context) => SettingsPage(
+                          auth: widget.auth,
+                        ),
+                    '/add_new_group': (context) =>
+                        AddNewGroupPage(auth: widget.auth)
                   },
                 )));
   }
@@ -115,11 +120,14 @@ class _MainPageState extends State<MainPage> {
                       crossAxisCount: 2,
                       children: [
                         ...friendGroupProvider.friendGroups
-                            .map((groupMetaData) => FriendGroupCard(
-                                  groupMetaData: groupMetaData,
-                                  auth: widget.auth,
-                                ))
-                            .toList(),
+                            .map((groupMetaData) {
+                          friendGroupProvider
+                              .updateGroupSize(groupMetaData.groupID);
+                          return FriendGroupCard(
+                            groupMetaData: groupMetaData,
+                            auth: widget.auth,
+                          );
+                        }).toList(),
                         AddNewGroupCard(
                           auth: widget.auth,
                         )
@@ -276,21 +284,19 @@ class FriendGroupCard extends StatelessWidget {
                                 // This is the group's profile picture
                                 flex: 5,
                                 child: Container(
-                                    margin: EdgeInsets.all(IMAGE_MARGIN),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 2,
-                                      ),
-                                      image: DecorationImage(
-                                          fit: BoxFit.cover,
-                                          image: NetworkImage(
-                                              groupMetaData.groupImageURL)),
-                                      shape: BoxShape.circle,
+                                  margin: EdgeInsets.all(IMAGE_MARGIN),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
                                     ),
-                                    child: Image.network(groupMetaData
-                                        .groupImageURL) //Profile picture
-                                    )),
+                                    image: DecorationImage(
+                                        fit: BoxFit.cover,
+                                        image: NetworkImage(
+                                            groupMetaData.groupImageURL)),
+                                    shape: BoxShape.circle,
+                                  ), //Profile picture
+                                )),
                             Flexible(
                                 // These are the favorite icon
                                 // and number of member icon
