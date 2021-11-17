@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:friend_sync/forms.dart';
+import 'package:friend_sync/group_creation.dart';
 import 'package:friend_sync/providers.dart';
 import 'package:friend_sync/utility.dart';
 import 'package:provider/provider.dart';
@@ -369,7 +370,7 @@ class _AddNewGroupState extends State<AddNewGroupPage> {
               BottomNavigationBarItem(
                   icon: Icon(Icons.settings), label: "Settings")
             ]),
-        body: NewGroupFormPage());
+        body: GroupCreationPage(auth: widget.auth!));
   }
 
   void _onItemTapped(int index) {
