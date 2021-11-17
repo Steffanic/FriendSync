@@ -32,7 +32,7 @@ class FriendGroupProvider extends ChangeNotifier {
   final firebase_storage.FirebaseStorage? storage;
 
   List<GroupMetaData> friendGroups;
-  late Map<String, List<dynamic>> memberLists = {};
+  late Map<String, Map<String, dynamic>> memberLists = {};
   List<Member> members;
   String newGroupID;
   String newGroupPhotoURL;
@@ -70,7 +70,7 @@ class FriendGroupProvider extends ChangeNotifier {
     }
   }
 
-  List<dynamic> getMemberList(String groupID) {
+  Map<String, dynamic> getMemberList(String groupID) {
     try {
       return memberLists.isEmpty
           ? throw MemberListEmptyException()
@@ -80,6 +80,7 @@ class FriendGroupProvider extends ChangeNotifier {
       if (e.runtimeType == MemberListEmptyException) {
         rethrow;
       }
+      print(e);
       throw MemberListNotFoundException(groupID);
     }
   }
@@ -121,7 +122,7 @@ class FriendGroupProvider extends ChangeNotifier {
     try {
       _memberListStream = db!.child(MEMBER_LIST_PATH).onValue.listen((event) {
         var listOfMembers =
-            Map<String, List<dynamic>>.from(event.snapshot.value);
+            Map<String, Map<String, dynamic>>.from(event.snapshot.value);
         print(listOfMembers.values);
         memberLists = listOfMembers;
         notifyListeners();
@@ -152,8 +153,10 @@ class FriendGroupProvider extends ChangeNotifier {
   }
 
   bool isInGroup(Member newMember, String groupID) {
-    List<Member> currentMemberList =
-        getMemberList(groupID).map((memID) => getMemberByID(memID)).toList();
+    List currentMemberList = getMemberList(groupID)
+        .entries
+        .map((value) => getMemberByID(value.value))
+        .toList();
     if (currentMemberList
         .where((mem) => mem.memberID == newMember.memberID)
         .isEmpty) {
@@ -175,9 +178,7 @@ class FriendGroupProvider extends ChangeNotifier {
       'isFavoriteGroup': isFavoriteGroup
     });
 
-    DatabaseReference memberListRef =
-        db!.child(MEMBER_LIST_PATH).child(newGroupID);
-    memberListRef.update({'0': auth!.currentUser!.uid});
+    addMemberToGroupRTDB(Member(memberID: auth!.currentUser!.uid), newGroupID);
 
     notifyListeners();
   }
@@ -197,7 +198,7 @@ class FriendGroupProvider extends ChangeNotifier {
     }
   }
 
-  void addMemberToGroupRTDB(String groupID, Member newMember) {
+  void addMemberToGroupRTDB(Member newMember, String groupID) {
     // This function should add the newMember's ID to the list of members in
     // the group with ID groupID. Maybe it should also check to see if the member is in the members table in the DB.
 
@@ -210,14 +211,17 @@ class FriendGroupProvider extends ChangeNotifier {
     // To add a member to a group's member list in the DB, pull a reference to the member_lists table and the specified groupID. Then call update with the new list.
 
     DatabaseReference memberListReference =
-        db!.child(MEMBER_LIST_PATH + '/$groupID');
-    int memberListLength;
-    memberListReference
-        .get()
-        .then((snapshot) => memberListLength = snapshot.value.entries.length);
-    memberListReference
-        .update({'${getMemberList(groupID).length}': newMember.memberID});
+        db!.child(MEMBER_LIST_PATH).child('/$groupID');
+    memberListReference.update({newMember.memberID: newMember.memberID});
 
+    updateGroupSize(groupID);
+    notifyListeners();
+  }
+
+  void removeMemberFromGroupRTDB(Member member, String groupID) {
+    DatabaseReference memberListReference =
+        db!.child(MEMBER_LIST_PATH + '/$groupID');
+    memberListReference.child(member.memberID).remove();
     updateGroupSize(groupID);
     notifyListeners();
   }

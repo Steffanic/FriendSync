@@ -31,7 +31,9 @@ class _SettingsPageState extends State<SettingsPage> {
             await FirebaseAuth.instance.signOut().then((_) {
               return Navigator.push(context,
                   MaterialPageRoute(builder: (context) {
-                return HomePage();
+                return HomePage(
+                  auth: widget.auth,
+                );
               }));
             });
           },

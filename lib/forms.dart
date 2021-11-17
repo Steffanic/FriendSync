@@ -35,11 +35,12 @@ class LogInFormState extends State<LogInForm> {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  late final userListener;
 
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
-
+    userListener.cancel();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -47,7 +48,7 @@ class LogInFormState extends State<LogInForm> {
 
   @override
   void initState() {
-    widget.auth!.userChanges().listen(
+    userListener = widget.auth!.userChanges().listen(
           (event) => setState(() => user = event),
         );
     super.initState();

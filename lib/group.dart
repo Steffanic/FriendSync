@@ -54,9 +54,6 @@ class _GroupPageState extends State<GroupPage> {
                     colors: [Colors.white, Colors.blue])),
             child: Column(mainAxisSize: MainAxisSize.max, children: [
               Flexible(
-                //
-                //TODO: Pass group details as arguments to keep the state managed in a consistent way.
-                //
                 child: Consumer<FriendGroupProvider>(
                     builder: (context, friendGroupProvider, child) {
                   return GroupStatusCard(
@@ -70,8 +67,16 @@ class _GroupPageState extends State<GroupPage> {
                 try {
                   memberChips = friendGroupProvider
                       .getMemberList(groupID)
-                      .map((memID) => MemberStatusChip(
-                          member: friendGroupProvider.getMemberByID(memID)))
+                      .entries
+                      .map((memID) => InkWell(
+                            onTap: () => _removeMember(
+                                friendGroupProvider.getMemberByID(memID.value),
+                                friendGroupProvider),
+                            child: MemberStatusChip(
+                                member: friendGroupProvider
+                                    .getMemberByID(memID.value),
+                                groupID: groupID),
+                          ))
                       .toList();
                 } catch (e) {
                   print("$e");
@@ -104,11 +109,25 @@ class _GroupPageState extends State<GroupPage> {
     if (friendGroupProvider.isInGroup(newMember, groupID)) {
       _showToast(context, "They are already in your group!");
     } else {
-      friendGroupProvider.addMemberToGroupRTDB(groupID, newMember);
+      friendGroupProvider.addMemberToGroupRTDB(newMember, groupID);
       _showToast(
           context,
           newMember.memberName +
               " has been added to " +
+              friendGroupProvider.getGroupByID(groupID).groupName);
+    }
+  }
+
+  void _removeMember(Member member, FriendGroupProvider friendGroupProvider) {
+    if (!friendGroupProvider.isInGroup(member, groupID)) {
+      _showToast(context,
+          "I don't know how you did it, but you are trying to remove a member who doesn't belong to this group 🤷‍♂️");
+    } else {
+      friendGroupProvider.removeMemberFromGroupRTDB(member, groupID);
+      _showToast(
+          context,
+          member.memberName +
+              " has been removed from " +
               friendGroupProvider.getGroupByID(groupID).groupName);
     }
   }
@@ -227,8 +246,12 @@ class GroupStatusCard extends StatelessWidget {
 
 class MemberStatusChip extends StatelessWidget {
   final Member member;
+  final String groupID;
 
-  const MemberStatusChip({this.member = const Member()});
+  const MemberStatusChip({
+    this.member = const Member(),
+    required this.groupID,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -293,11 +316,11 @@ class AddMemberDialog extends StatelessWidget {
                           .toList()
                           .map((mem) {
                         return InkWell(
-                            onTap: () =>
-                                addMemberFunction(mem, friendGroupProvider),
-                            child: MemberStatusChip(
-                              member: mem,
-                            ));
+                          onTap: () =>
+                              addMemberFunction(mem, friendGroupProvider),
+                          child:
+                              MemberStatusChip(member: mem, groupID: groupID),
+                        );
                       }).toList()
                     ],
                   ),

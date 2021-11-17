@@ -51,25 +51,20 @@ class _HomePageState extends State<HomePage> {
     }
     // get friend group metadata from db
 
-    return ChangeNotifierProvider<FriendGroupProvider>(
-        create: (context) => FriendGroupProvider(
-            auth: widget.auth, db: widget.db, storage: widget.storage),
-        child: Consumer<FriendGroupProvider>(
-            builder: (context, friendGroupProvider, child) => MaterialApp(
-                  title: "Friend Sync",
-                  initialRoute: '/',
-                  routes: {
-                    '/': (context) => MainPage(auth: widget.auth!),
-                    '/group': (context) => GroupPage(
-                          auth: widget.auth!,
-                        ),
-                    '/settings': (context) => SettingsPage(
-                          auth: widget.auth,
-                        ),
-                    '/add_new_group': (context) =>
-                        AddNewGroupPage(auth: widget.auth)
-                  },
-                )));
+    return MaterialApp(
+      title: "Friend Sync",
+      initialRoute: '/',
+      routes: {
+        '/': (context) => MainPage(auth: widget.auth!),
+        '/group': (context) => GroupPage(
+              auth: widget.auth!,
+            ),
+        '/settings': (context) => SettingsPage(
+              auth: widget.auth,
+            ),
+        '/add_new_group': (context) => AddNewGroupPage(auth: widget.auth)
+      },
+    );
   }
 }
 
@@ -90,56 +85,52 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        bottomNavigationBar: BottomNavigationBar(
-            onTap: _onItemTapped,
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.settings), label: "Settings")
-            ]),
         body: Container(
-          decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.white, Colors.blue])),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Flexible(
-                child: CurrentUserStatusCard(),
-                flex: 2,
-              ),
-              Flexible(
-                child: Consumer<FriendGroupProvider>(
-                  builder: (context, friendGroupProvider, child) => Container(
-                    padding: EdgeInsets.all(24),
-                    margin: EdgeInsets.only(left: 32, right: 32),
-                    child: GridView.count(
-                      crossAxisSpacing: 25,
-                      crossAxisCount: 2,
-                      children: [
-                        ...friendGroupProvider.friendGroups
-                            .map((groupMetaData) {
-                          friendGroupProvider
-                              .updateGroupSize(groupMetaData.groupID);
-                          return FriendGroupCard(
-                            groupMetaData: groupMetaData,
-                            auth: widget.auth,
-                          );
-                        }).toList(),
-                        AddNewGroupCard(
+      decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.white, Colors.blue])),
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Flexible(
+            child: CurrentUserStatusCard(),
+            flex: 2,
+          ),
+          Expanded(
+            child: Consumer<FriendGroupProvider>(
+              builder: (context, friendGroupProvider, child) => Container(
+                margin: EdgeInsets.only(left: 32, right: 32),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: GridView.count(
+                    crossAxisSpacing: 25,
+                    crossAxisCount: 2,
+                    clipBehavior: Clip.antiAlias,
+                    children: [
+                      ...friendGroupProvider.friendGroups.map((groupMetaData) {
+                        friendGroupProvider
+                            .updateGroupSize(groupMetaData.groupID);
+                        return FriendGroupCard(
+                          groupMetaData: groupMetaData,
                           auth: widget.auth,
-                        )
-                      ],
-                    ),
+                        );
+                      }).toList(),
+                      AddNewGroupCard(
+                        auth: widget.auth,
+                      )
+                    ],
                   ),
                 ),
-                flex: 4,
-              )
-            ],
-          ),
-        ));
+              ),
+            ),
+            flex: 4,
+          )
+        ],
+      ),
+    ));
   }
 
   void _onItemTapped(int index) {
@@ -220,12 +211,15 @@ class CurrentUserStatusCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.max,
-                  children: const [
-                    Icon(
-                      Icons.settings,
-                      color: Colors.white,
+                  children: [
+                    InkWell(
+                      onTap: () => Navigator.pushNamed(context, "/settings"),
+                      child: const Icon(
+                        Icons.settings,
+                        color: Colors.white,
+                      ),
                     ),
-                    Icon(
+                    const Icon(
                       Icons.person,
                       color: Colors.green,
                     ),

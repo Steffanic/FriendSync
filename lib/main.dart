@@ -68,11 +68,14 @@ class _MyApp extends State<MyApp> {
             final firebase_storage.FirebaseStorage _storage =
                 firebase_storage.FirebaseStorage.instance;
 
-            return HomePage(
-              auth: _auth,
-              db: _db,
-              storage: _storage,
-            );
+            return ChangeNotifierProvider<FriendGroupProvider>(
+                create: (context) => FriendGroupProvider(
+                    auth: _auth, db: _db, storage: _storage),
+                child: HomePage(
+                  auth: _auth,
+                  db: _db,
+                  storage: _storage,
+                ));
           }
 
           return MaterialApp(
