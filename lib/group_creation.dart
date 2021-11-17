@@ -76,44 +76,47 @@ class GroupNamePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          const Text("Give your new group a name!"),
-          const Text("🤔💭🤔"),
-          TextFormField(
-            controller: nameController,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "Can't think of anything?";
-              }
-              return null;
-            },
-            decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Champions of the Sun'),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  width: 50,
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            const Text("Give your new group a name!"),
+            const Text("🤔💭🤔"),
+            TextFormField(
+              controller: nameController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Can't think of anything?";
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                  border: UnderlineInputBorder(),
+                  labelText: 'Group Name',
+                  hintText: 'Champions of the Sun'),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    width: 50,
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: ElevatedButton(
-                    onPressed: () {
-                      setGroupName(nameController.text);
-                      Navigator.pushNamed(context, '/tagline');
-                    },
-                    child: Text("Next")),
-              ),
-            ],
-          )
-        ],
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: ElevatedButton(
+                      onPressed: () {
+                        setGroupName(nameController.text);
+                        Navigator.pushNamed(context, '/tagline');
+                      },
+                      child: Text("Next")),
+                ),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -130,44 +133,47 @@ class GroupTaglinePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          const Text("Say something about your group!"),
-          const Text("🤔💭🤔"),
-          TextFormField(
-            controller: taglineController,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "Can't think of anything?";
-              }
-              return null;
-            },
-            decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Defenders of Justics'),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  width: 50,
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            const Text("Say something about your group!"),
+            const Text("🤔💭🤔"),
+            TextFormField(
+              controller: taglineController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Can't think of anything?";
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                  border: UnderlineInputBorder(),
+                  labelText: 'Group Description',
+                  hintText: 'Masters of Karate'),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    width: 50,
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: ElevatedButton(
-                    onPressed: () {
-                      setGroupTagline(taglineController.text);
-                      Navigator.pushNamed(context, '/photo');
-                    },
-                    child: Text("Next")),
-              ),
-            ],
-          )
-        ],
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: ElevatedButton(
+                      onPressed: () {
+                        setGroupTagline(taglineController.text);
+                        Navigator.pushNamed(context, '/photo');
+                      },
+                      child: Text("Next")),
+                ),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -193,73 +199,82 @@ class GroupPhotoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: InkWell(
-        onTap: () => showDialog(
-            context: context,
-            builder: (BuildContext context) => Dialog(
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
+    return Scaffold(
+      body: Center(
+        child: InkWell(
+          onTap: () => showDialog(
+              context: context,
+              builder: (BuildContext context) => Dialog(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ElevatedButton(
+                                onPressed: () {
+                                  getMyImage(ImageSource.camera);
+                                },
+                                child: Row(children: const [
+                                  Text("Take a Picture"),
+                                  Icon(Icons.camera),
+                                ])),
+                            ElevatedButton(
+                                onPressed: () {
+                                  getMyImage(ImageSource.gallery);
+                                },
+                                child: Row(children: const [
+                                  Text("Choose from Gallery"),
+                                  Icon(Icons.photo),
+                                ])),
+                          ],
+                        ),
+                      ],
+                    ),
+                  )),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.blue,
+                      gradient: LinearGradient(
+                          colors: [Colors.white, Colors.blue],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter)),
+                ),
+              ),
+              Text("Upload a Group photo!"),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      width: 50,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Consumer<FriendGroupProvider>(
+                      builder: (context, friendGroupProvider, child) =>
                           ElevatedButton(
                               onPressed: () {
-                                getMyImage(ImageSource.camera);
+                                submitToRTDB(friendGroupProvider);
+                                Navigator.of(context)
+                                    .pushReplacement(MaterialPageRoute(
+                                        builder: (context) => HomePage(
+                                              auth: auth,
+                                            )));
                               },
-                              child: Row(children: const [
-                                Text("Take a Picture"),
-                                Icon(Icons.camera),
-                              ])),
-                          ElevatedButton(
-                              onPressed: () {
-                                getMyImage(ImageSource.gallery);
-                              },
-                              child: Row(children: const [
-                                Text("Choose from Gallery"),
-                                Icon(Icons.photo),
-                              ])),
-                        ],
-                      ),
-                    ],
+                              child: Text("Submit")),
+                    ),
                   ),
-                )),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient:
-                      LinearGradient(colors: [Colors.white, Colors.blue])),
-            ),
-            Text("Upload a Group photo!"),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    width: 50,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Consumer<FriendGroupProvider>(
-                    builder: (context, friendGroupProvider, child) =>
-                        ElevatedButton(
-                            onPressed: () {
-                              submitToRTDB(friendGroupProvider);
-                              Navigator.of(context)
-                                  .pushReplacement(MaterialPageRoute(
-                                      builder: (context) => HomePage(
-                                            auth: auth,
-                                          )));
-                            },
-                            child: Text("Submit")),
-                  ),
-                ),
-              ],
-            )
-          ],
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );

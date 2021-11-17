@@ -34,26 +34,31 @@ class _SettingsPageState extends State<SettingsPage> {
     checkForLoggedInUser(context, widget.auth!);
 
     return Scaffold(
-      bottomNavigationBar: BottomNavigationBar(
-          onTap: _onItemTapped,
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.settings), label: "Settings")
-          ]),
       body: Container(
-        child: ElevatedButton(
-          onPressed: () async {
-            await FirebaseAuth.instance.signOut().then((_) {
-              return Navigator.push(context,
-                  MaterialPageRoute(builder: (context) {
-                return HomePage(
-                  auth: widget.auth,
-                );
-              }));
-            });
-          },
-          child: Text("Log Out."),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                InkWell(
+                    onTap: () => _onItemTapped(0),
+                    child: Icon(Icons.arrow_left_rounded)),
+              ],
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut().then((_) {
+                  return Navigator.push(context,
+                      MaterialPageRoute(builder: (context) {
+                    return HomePage(
+                      auth: widget.auth,
+                    );
+                  }));
+                });
+              },
+              child: Text("Log Out."),
+            ),
+          ],
         ),
       ),
     );
@@ -61,7 +66,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _onItemTapped(int index) {
     if (index == 0) {
-      Navigator.popUntil(context, ModalRoute.withName('/'));
+      Navigator.pop(context);
     }
     if (index == 1) {}
   }

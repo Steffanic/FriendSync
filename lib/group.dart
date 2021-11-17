@@ -56,13 +56,6 @@ class _GroupPageState extends State<GroupPage> {
     }
 
     return Scaffold(
-        bottomNavigationBar: BottomNavigationBar(
-            onTap: _onItemTapped,
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.settings), label: "Settings")
-            ]),
         body: Container(
             decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -70,6 +63,17 @@ class _GroupPageState extends State<GroupPage> {
                     end: Alignment.bottomCenter,
                     colors: [Colors.white, Colors.blue])),
             child: Column(mainAxisSize: MainAxisSize.max, children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                      onTap: () => _onItemTapped(0),
+                      child: Icon(Icons.arrow_left_rounded)),
+                  InkWell(
+                      onTap: () => _onItemTapped(1),
+                      child: Icon(Icons.settings))
+                ],
+              ),
               Flexible(
                 child: Consumer<FriendGroupProvider>(
                     builder: (context, friendGroupProvider, child) {
@@ -114,7 +118,7 @@ class _GroupPageState extends State<GroupPage> {
 
   void _onItemTapped(int index) {
     if (index == 0) {
-      Navigator.popUntil(context, ModalRoute.withName('/'));
+      Navigator.pop(context);
     }
     if (index == 1) {
       Navigator.pushNamed(context, "/settings")
@@ -362,15 +366,7 @@ class _AddNewGroupState extends State<AddNewGroupPage> {
   @override
   Widget build(BuildContext context) {
     checkForLoggedInUser(context, widget.auth!);
-    return Scaffold(
-        bottomNavigationBar: BottomNavigationBar(
-            onTap: _onItemTapped,
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.settings), label: "Settings")
-            ]),
-        body: GroupCreationPage(auth: widget.auth!));
+    return Scaffold(body: GroupCreationPage(auth: widget.auth!));
   }
 
   void _onItemTapped(int index) {
