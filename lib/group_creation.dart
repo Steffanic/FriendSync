@@ -29,13 +29,16 @@ class _GroupCreationPageState extends State<GroupCreationPage> {
       routes: {
         '/name': (context) => GroupNamePage(
               setGroupName: _setGroupName,
+              onItemTapped: _onItemTapped,
             ),
         '/tagline': (context) => GroupTaglinePage(
               setGroupTagline: _setGroupTagline,
+              onItemTapped: _onItemTapped,
             ),
         '/photo': (context) => GroupPhotoPage(
             setGroupPhoto: _setGroupPhoto,
             submitToRTDB: _submitToRTDB,
+            onItemTapped: _onItemTapped,
             auth: widget.auth)
       },
     );
@@ -63,14 +66,23 @@ class _GroupCreationPageState extends State<GroupCreationPage> {
     friendGroupProvider.addGroupToRTDB(
         groupName!, groupTagline!, 1, false, pfpImage!);
   }
+
+  _onItemTapped(int index, BuildContext subcontext) {
+    if (index == 0) {
+      if (ModalRoute.of(subcontext)!.isFirst) {
+        Navigator.of(subcontext, rootNavigator: true).pop();
+      } else {
+        Navigator.of(subcontext).pop();
+      }
+    }
+  }
 }
 
 class GroupNamePage extends StatelessWidget {
   Function setGroupName;
+  Function onItemTapped;
 
-  GroupNamePage({
-    required this.setGroupName,
-  });
+  GroupNamePage({required this.setGroupName, required this.onItemTapped});
 
   final TextEditingController nameController = TextEditingController();
 
@@ -80,22 +92,37 @@ class GroupNamePage extends StatelessWidget {
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text("Give your new group a name!"),
-            const Text("🤔💭🤔"),
-            TextFormField(
-              controller: nameController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Can't think of anything?";
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                  border: UnderlineInputBorder(),
-                  labelText: 'Group Name',
-                  hintText: 'Champions of the Sun'),
+            Expanded(
+              flex: 1,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  InkWell(
+                      onTap: () => onItemTapped(0, context),
+                      child: Icon(Icons.arrow_left_rounded)),
+                ],
+              ),
+            ),
+            Flexible(flex: 3, child: Text("Give your new group a name!")),
+            Flexible(flex: 3, child: Text("🤔💭🤔")),
+            Flexible(
+              flex: 2,
+              child: TextFormField(
+                controller: nameController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Can't think of anything?";
+                  }
+                  return null;
+                },
+                decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Group Name',
+                    hintText: 'Champions of the Sun'),
+              ),
             ),
             Row(
               children: [
@@ -124,10 +151,9 @@ class GroupNamePage extends StatelessWidget {
 
 class GroupTaglinePage extends StatelessWidget {
   Function setGroupTagline;
+  Function onItemTapped;
 
-  GroupTaglinePage({
-    required this.setGroupTagline,
-  });
+  GroupTaglinePage({required this.setGroupTagline, required this.onItemTapped});
 
   final TextEditingController taglineController = TextEditingController();
 
@@ -137,22 +163,37 @@ class GroupTaglinePage extends StatelessWidget {
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text("Say something about your group!"),
-            const Text("🤔💭🤔"),
-            TextFormField(
-              controller: taglineController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Can't think of anything?";
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                  border: UnderlineInputBorder(),
-                  labelText: 'Group Description',
-                  hintText: 'Masters of Karate'),
+            Expanded(
+              flex: 1,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                      onTap: () => onItemTapped(0, context),
+                      child: Icon(Icons.arrow_left_rounded)),
+                ],
+              ),
+            ),
+            Flexible(flex: 3, child: Text("Say something about your group!")),
+            Flexible(flex: 3, child: Text("🤔💭🤔")),
+            Flexible(
+              flex: 2,
+              child: TextFormField(
+                controller: taglineController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Can't think of anything?";
+                  }
+                  return null;
+                },
+                decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Group Description',
+                    hintText: 'Masters of Karate'),
+              ),
             ),
             Row(
               children: [
@@ -182,11 +223,13 @@ class GroupTaglinePage extends StatelessWidget {
 class GroupPhotoPage extends StatelessWidget {
   Function setGroupPhoto;
   Function submitToRTDB;
+  Function onItemTapped;
   FirebaseAuth auth;
 
   GroupPhotoPage(
       {required this.setGroupPhoto,
       required this.submitToRTDB,
+      required this.onItemTapped,
       required this.auth});
 
   final pfpController = ImagePicker();
@@ -201,80 +244,90 @@ class GroupPhotoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: InkWell(
-          onTap: () => showDialog(
-              context: context,
-              builder: (BuildContext context) => Dialog(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ElevatedButton(
-                                onPressed: () {
-                                  getMyImage(ImageSource.camera);
-                                },
-                                child: Row(children: const [
-                                  Text("Take a Picture"),
-                                  Icon(Icons.camera),
-                                ])),
-                            ElevatedButton(
-                                onPressed: () {
-                                  getMyImage(ImageSource.gallery);
-                                },
-                                child: Row(children: const [
-                                  Text("Choose from Gallery"),
-                                  Icon(Icons.photo),
-                                ])),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.blue,
-                      gradient: LinearGradient(
-                          colors: [Colors.white, Colors.blue],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter)),
-                ),
-              ),
-              Text("Upload a Group photo!"),
-              Row(
+        child: Column(
+          children: [
+            Expanded(
+              flex: 1,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Container(
-                      width: 50,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Consumer<FriendGroupProvider>(
-                      builder: (context, friendGroupProvider, child) =>
-                          ElevatedButton(
-                              onPressed: () {
-                                submitToRTDB(friendGroupProvider);
-                                Navigator.of(context)
-                                    .pushReplacement(MaterialPageRoute(
-                                        builder: (context) => HomePage(
-                                              auth: auth,
-                                            )));
-                              },
-                              child: Text("Submit")),
-                    ),
-                  ),
+                  InkWell(
+                      onTap: () => onItemTapped(0, context),
+                      child: Icon(Icons.arrow_left_rounded)),
                 ],
-              )
-            ],
-          ),
+              ),
+            ),
+            Flexible(
+              flex: 3,
+              child: InkWell(
+                  onTap: () => showDialog(
+                      context: context,
+                      builder: (BuildContext context) => Dialog(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ElevatedButton(
+                                        onPressed: () {
+                                          getMyImage(ImageSource.camera);
+                                        },
+                                        child: Row(children: const [
+                                          Text("Take a Picture"),
+                                          Icon(Icons.camera),
+                                        ])),
+                                    ElevatedButton(
+                                        onPressed: () {
+                                          getMyImage(ImageSource.gallery);
+                                        },
+                                        child: Row(children: const [
+                                          Text("Choose from Gallery"),
+                                          Icon(Icons.photo),
+                                        ])),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.blue,
+                        gradient: LinearGradient(
+                            colors: [Colors.white, Colors.blue],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter)),
+                  )),
+            ),
+            Flexible(flex: 2, child: Text("Upload a Group photo!")),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    width: 50,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Consumer<FriendGroupProvider>(
+                    builder: (context, friendGroupProvider, child) =>
+                        ElevatedButton(
+                            onPressed: () {
+                              submitToRTDB(friendGroupProvider);
+                              Navigator.of(context)
+                                  .pushReplacement(MaterialPageRoute(
+                                      builder: (context) => HomePage(
+                                            auth: auth,
+                                          )));
+                            },
+                            child: Text("Submit")),
+                  ),
+                ),
+              ],
+            )
+          ],
         ),
       ),
     );

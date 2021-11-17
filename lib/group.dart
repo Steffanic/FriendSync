@@ -143,6 +143,9 @@ class _GroupPageState extends State<GroupPage> {
     if (!friendGroupProvider.isInGroup(member, groupID)) {
       _showToast(context,
           "I don't know how you did it, but you are trying to remove a member who doesn't belong to this group 🤷‍♂️");
+    }
+    if (widget.auth!.currentUser!.uid == member.memberID) {
+      _showToast(context, "You can't remove yourself, silly!");
     } else {
       friendGroupProvider.removeMemberFromGroupRTDB(member, groupID);
       _showToast(
