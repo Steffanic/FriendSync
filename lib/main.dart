@@ -84,13 +84,19 @@ class _MyApp extends State<MyApp> {
             final firebase_storage.FirebaseStorage _storage =
                 firebase_storage.FirebaseStorage.instance;
 
+            final GoogleAuthProvider _googleProvider = GoogleAuthProvider();
+
             return ChangeNotifierProvider<FriendGroupProvider>(
                 create: (context) => FriendGroupProvider(
-                    auth: _auth, db: _db, storage: _storage),
+                    auth: _auth,
+                    db: _db,
+                    storage: _storage,
+                    googleProvider: _googleProvider),
                 child: HomePage(
                   auth: _auth,
                   db: _db,
                   storage: _storage,
+                  googleProvider: _googleProvider,
                 ));
           }
 

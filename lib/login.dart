@@ -29,8 +29,9 @@ class LogInPage extends StatelessWidget {
   final FirebaseAuth? auth;
   final DatabaseReference? db;
   final firebase_storage.FirebaseStorage? storage;
+  final GoogleAuthProvider? googleProvider;
 
-  LogInPage({this.auth, this.db, this.storage});
+  LogInPage({this.auth, this.db, this.storage, this.googleProvider});
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +56,12 @@ class LogInPage extends StatelessWidget {
             ),
             Flexible(
                 flex: 3,
-                child: LogInForm(auth: auth, db: db, storage: storage)),
+                child: LogInForm(
+                  auth: auth,
+                  db: db,
+                  storage: storage,
+                  googleProvider: googleProvider,
+                )),
           ],
         ),
       ),

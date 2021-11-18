@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:friend_sync/home.dart';
 import 'package:friend_sync/utility.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 // Define a custom Form widget.
@@ -29,7 +30,9 @@ class LogInForm extends StatefulWidget {
   final FirebaseAuth? auth;
   final DatabaseReference? db;
   final firebase_storage.FirebaseStorage? storage;
-  const LogInForm({Key? key, this.auth, this.db, this.storage})
+  final GoogleAuthProvider? googleProvider;
+  const LogInForm(
+      {Key? key, this.auth, this.db, this.storage, this.googleProvider})
       : super(key: key);
 
   @override
@@ -125,19 +128,30 @@ class LogInFormState extends State<LogInForm> {
                 ),
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                registerUser();
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  "Register",
-                  style: TextStyle(fontSize: 24),
-                ),
+          ]),
+          Text("or"),
+          Row(
+            children: [
+              ElevatedButton(
+                onPressed: () => signInWithGoogle(),
+                child: Image(
+                    image: AssetImage(
+                        'google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png')),
+              )
+            ],
+          ),
+          ElevatedButton(
+            onPressed: () {
+              registerUser();
+            },
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                "Register",
+                style: TextStyle(fontSize: 24),
               ),
             ),
-          ]),
+          ),
         ],
       ),
     );
@@ -146,7 +160,7 @@ class LogInFormState extends State<LogInForm> {
   Future<void> registerUser() async {
     if (_logInFormKey.currentState!.validate()) {
       try {
-        UserCredential userCredential = await FirebaseAuth.instance
+        UserCredential userCredential = await widget.auth!
             .createUserWithEmailAndPassword(
                 email: emailController.text, password: passwordController.text);
         showToast(context,
@@ -167,7 +181,7 @@ class LogInFormState extends State<LogInForm> {
   Future<void> authenticateUser() async {
     if (_logInFormKey.currentState!.validate()) {
       try {
-        UserCredential userCredential = await FirebaseAuth.instance
+        UserCredential userCredential = await widget.auth!
             .signInWithEmailAndPassword(
                 email: emailController.text, password: passwordController.text);
         showToast(context,
@@ -190,6 +204,26 @@ class LogInFormState extends State<LogInForm> {
         showToast(context, "${e.message}");
       }
     }
+  }
+
+  Future<void> signInWithGoogle() async {
+    UserCredential userCredential =
+        await widget.auth!.signInWithPopup(widget.googleProvider!);
+    user = userCredential.user;
+    widget.db!.child('members').update({
+      user!.uid: {
+        'email': user!.email,
+        'name': user!.displayName,
+        'profilePictureURL': '',
+        'friendList': {}
+      }
+    });
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => HomePage(
+              auth: widget.auth,
+              db: widget.db,
+              storage: widget.storage,
+            )));
   }
 }
 

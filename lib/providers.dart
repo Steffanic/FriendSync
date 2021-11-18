@@ -46,6 +46,7 @@ class FriendGroupProvider extends ChangeNotifier {
   final FirebaseAuth? auth;
   final DatabaseReference? db;
   final firebase_storage.FirebaseStorage? storage;
+  final GoogleAuthProvider? googleProvider;
 
   List<GroupMetaData> friendGroups;
   late Map<String, Map<String, dynamic>> memberLists = {};
@@ -65,6 +66,7 @@ class FriendGroupProvider extends ChangeNotifier {
     this.auth,
     this.db,
     this.storage,
+    this.googleProvider,
     this.friendGroups = const [],
     this.members = const [],
     this.newGroupID = "",

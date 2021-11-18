@@ -36,8 +36,10 @@ class HomePage extends StatefulWidget {
   final FirebaseAuth? auth;
   final DatabaseReference? db;
   final firebase_storage.FirebaseStorage? storage;
+  final GoogleAuthProvider? googleProvider;
 
-  HomePage({Key? key, this.auth, this.db, this.storage}) : super(key: key);
+  HomePage({Key? key, this.auth, this.db, this.storage, this.googleProvider})
+      : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -63,6 +65,7 @@ class _HomePageState extends State<HomePage> {
         auth: widget.auth,
         db: widget.db,
         storage: widget.storage,
+        googleProvider: widget.googleProvider,
       );
     }
     // get friend group metadata from db
