@@ -214,7 +214,7 @@ class LogInFormState extends State<LogInForm> {
       user!.uid: {
         'email': user!.email,
         'name': user!.displayName,
-        'profilePictureURL': '',
+        'profilePictureURL': user!.photoURL,
         'friendList': {}
       }
     });
