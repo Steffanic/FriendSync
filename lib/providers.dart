@@ -154,7 +154,8 @@ class FriendGroupProvider extends ChangeNotifier {
     try {
       var memberFuture = db!.child(MEMBER_PATH).onValue.listen((event) {
         var memberMap = Map<String, dynamic>.from(event.snapshot.value);
-        members = memberMap.entries
+        final listOfMembers = memberMap;
+        members = listOfMembers.entries
             .map((mem) => Member.fromRTDB(mem.key, mem.value))
             .toList();
         notifyListeners();

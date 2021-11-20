@@ -210,14 +210,12 @@ class LogInFormState extends State<LogInForm> {
     UserCredential userCredential =
         await widget.auth!.signInWithPopup(widget.googleProvider!);
     user = userCredential.user;
-    widget.db!.child('members').update({
-      user!.uid: {
-        'email': user!.email,
-        'name': user!.displayName,
-        'profilePictureURL': user!.photoURL,
-        'friendList': {}
-      }
-    });
+    final userRef = widget.db!.child('members').child(user!.uid);
+    userRef.update({'email': user!.email});
+    userRef.update({'name': user!.displayName});
+    userRef.update({'profilePictureURL': user!.photoURL});
+    userRef.update({'friendList': {user!.uid: user!.uid}});
+    
     Navigator.of(context).pushReplacement(MaterialPageRoute(
         builder: (context) => HomePage(
               auth: widget.auth,

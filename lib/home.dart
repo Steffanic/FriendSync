@@ -115,7 +115,7 @@ class _MainPageState extends State<MainPage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Flexible(
-            child: CurrentUserStatusCard(),
+            child: CurrentUserStatusCard(userID: widget.auth.currentUser!.uid),
             flex: 2,
           ),
           Expanded(
@@ -164,6 +164,10 @@ class _MainPageState extends State<MainPage> {
 }
 
 class CurrentUserStatusCard extends StatelessWidget {
+  final String? userID;
+
+  CurrentUserStatusCard({this.userID});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -185,17 +189,21 @@ class CurrentUserStatusCard extends StatelessWidget {
         children: [
           Flexible(
               flex: 3,
-              child: Container(
-                margin: EdgeInsets.all(IMAGE_MARGIN),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
-                  image: const DecorationImage(
-                      image: NetworkImage("https://i.imgur.com/cWgJmWt.jpg")),
-                  shape: BoxShape.circle,
-                ), //Profile picture
+              child: Consumer<FriendGroupProvider>(
+                builder: (context, friendGroupProvider, child) => Container(
+                  margin: EdgeInsets.all(IMAGE_MARGIN),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 2,
+                    ),
+                    image: DecorationImage(
+                        image: NetworkImage(friendGroupProvider
+                            .getMemberByID(userID!)
+                            .memberProfilePicture)),
+                    shape: BoxShape.circle,
+                  ), //Profile picture
+                ),
               )),
           Expanded(
             flex: 6,

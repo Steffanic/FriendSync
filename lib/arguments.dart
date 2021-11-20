@@ -14,7 +14,6 @@
    limitations under the License.
 */
 
-
 class Member {
   final String memberName;
   final String memberEmail;
@@ -35,7 +34,8 @@ class Member {
         memberEmail: memMap['email'],
         memberName: memMap['name'],
         memberProfilePicture: memMap['profilePictureURL'],
-        friendList: List<String>.from(memMap['friendList']));
+        friendList: List<String>.from(
+            memMap['friendList'].entries.map((entry) => entry.value).toList()));
   }
 }
 
