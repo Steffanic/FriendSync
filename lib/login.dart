@@ -49,7 +49,7 @@ class LogInPage extends StatelessWidget {
               ),
             ),
             const Flexible(
-              flex: 4,
+              flex: 2,
               child: Image(
                   image: NetworkImage(
                       "https://img.freepik.com/free-vector/mobile-login-concept-illustration_114360-135.jpg?size=338&ext=jpg")),
