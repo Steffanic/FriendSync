@@ -14,7 +14,10 @@
    limitations under the License.
    */
 
+import 'dart:io' show Platform;
+
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:friend_sync/providers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -140,15 +143,18 @@ class LogInFormState extends State<LogInForm> {
               )
             ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              registerUser();
-            },
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                "Register",
-                style: TextStyle(fontSize: 24),
+          Flexible(
+            flex: 2,
+            child: ElevatedButton(
+              onPressed: () {
+                registerUser();
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  "Register",
+                  style: TextStyle(fontSize: 24),
+                ),
               ),
             ),
           ),
@@ -207,15 +213,30 @@ class LogInFormState extends State<LogInForm> {
   }
 
   Future<void> signInWithGoogle() async {
-    UserCredential userCredential =
-        await widget.auth!.signInWithPopup(widget.googleProvider!);
-    user = userCredential.user;
+    UserCredential? userCredential;
+    if (kIsWeb) {
+      UserCredential userCredential =
+          await widget.auth!.signInWithPopup(widget.googleProvider!);
+    }
+    if (Platform.isAndroid) {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAuthentication? googleAuth =
+          await googleUser?.authentication.then((value) async {
+        final credential = GoogleAuthProvider.credential(
+            accessToken: value.accessToken, idToken: value.idToken);
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithCredential(credential);
+      });
+    }
+    user = userCredential!.user;
     final userRef = widget.db!.child('members').child(user!.uid);
     userRef.update({'email': user!.email});
     userRef.update({'name': user!.displayName});
     userRef.update({'profilePictureURL': user!.photoURL});
-    userRef.update({'friendList': {user!.uid: user!.uid}});
-    
+    userRef.update({
+      'friendList': {user!.uid: user!.uid}
+    });
+
     Navigator.of(context).pushReplacement(MaterialPageRoute(
         builder: (context) => HomePage(
               auth: widget.auth,
