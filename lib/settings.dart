@@ -15,14 +15,18 @@
    */
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:friend_sync/home.dart';
 import 'package:friend_sync/utility.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class SettingsPage extends StatefulWidget {
   final FirebaseAuth? auth;
-  SettingsPage({this.auth});
+  final DatabaseReference? db;
+
+  SettingsPage({this.auth, this.db});
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
@@ -34,31 +38,48 @@ class _SettingsPageState extends State<SettingsPage> {
     checkForLoggedInUser(context, widget.auth!);
 
     return Scaffold(
-      body: Container(
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                InkWell(
-                    onTap: () => _onItemTapped(0),
-                    child: Icon(Icons.arrow_left_rounded)),
-              ],
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut().then((_) {
-                  return Navigator.push(context,
-                      MaterialPageRoute(builder: (context) {
-                    return HomePage(
-                      auth: widget.auth,
-                    );
-                  }));
-                });
-              },
-              child: Text("Log Out."),
-            ),
-          ],
+      body: SafeArea(
+        child: Container(
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                      onTap: () => _onItemTapped(0),
+                      child: Icon(Icons.arrow_left_rounded)),
+                ],
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final gSign = GoogleSignIn();
+                  if (gSign.currentUser != null) {
+                    await gSign.signOut().then((value) async {
+                      await widget.auth!.signOut().then((_) {
+                        return Navigator.push(context,
+                            MaterialPageRoute(builder: (context) {
+                          return HomePage(
+                            auth: widget.auth,
+                            db: widget.db,
+                          );
+                        }));
+                      });
+                    });
+                  }
+                  await widget.auth!.signOut().then((_) {
+                    return Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return HomePage(
+                        auth: widget.auth,
+                        db: widget.db,
+                      );
+                    }));
+                  });
+                },
+                child: Text("Log Out."),
+              ),
+            ],
+          ),
         ),
       ),
     );

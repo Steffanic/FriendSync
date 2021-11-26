@@ -20,22 +20,36 @@ class Member {
   final String memberProfilePicture;
   final String memberID; //Firebase User ID.
   final List<String> friendList;
+  final List<String> groupList;
 
-  const Member(
-      {this.memberID = "0",
-      this.memberName = "Patrick Steffanic",
-      this.memberEmail = "email@gmail.com",
-      this.memberProfilePicture = "https://i.imgur.com/cWgJmWt.jpg",
-      this.friendList = const []});
+  const Member({
+    this.memberID = "0",
+    this.memberName = "Patrick Steffanic",
+    this.memberEmail = "email@gmail.com",
+    this.memberProfilePicture = "https://i.imgur.com/cWgJmWt.jpg",
+    this.friendList = const [],
+    this.groupList = const [],
+  });
 
   factory Member.fromRTDB(String memID, Map<String, dynamic> memMap) {
+    List<String> memFriendList = [];
+    for (String key in memMap['friendList'].keys) {
+      memFriendList.add(memMap['friendList'][key]);
+    }
+
+    List<String> memGroupList = [];
+    if (memMap.keys.contains('groupList')) {
+      for (String key in memMap['groupList'].keys) {
+        memGroupList.add(memMap['groupList'][key]);
+      }
+    }
     return Member(
         memberID: memID,
         memberEmail: memMap['email'],
         memberName: memMap['name'],
         memberProfilePicture: memMap['profilePictureURL'],
-        friendList: List<String>.from(
-            memMap['friendList'].entries.map((entry) => entry.value).toList()));
+        friendList: memFriendList,
+        groupList: memGroupList);
   }
 }
 

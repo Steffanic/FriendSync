@@ -19,8 +19,7 @@ class _GroupCreationPageState extends State<GroupCreationPage> {
   String? groupName;
   String? groupTagline;
   Uint8List? pfpImage;
-  int currentPage = 0;
-
+ 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -28,14 +27,17 @@ class _GroupCreationPageState extends State<GroupCreationPage> {
       initialRoute: '/name',
       routes: {
         '/name': (context) => GroupNamePage(
+              groupName: groupName,
               setGroupName: _setGroupName,
               onItemTapped: _onItemTapped,
             ),
         '/tagline': (context) => GroupTaglinePage(
+              groupTagline: groupTagline,
               setGroupTagline: _setGroupTagline,
               onItemTapped: _onItemTapped,
             ),
         '/photo': (context) => GroupPhotoPage(
+            groupPhoto: pfpImage,
             setGroupPhoto: _setGroupPhoto,
             submitToRTDB: _submitToRTDB,
             onItemTapped: _onItemTapped,
@@ -79,15 +81,19 @@ class _GroupCreationPageState extends State<GroupCreationPage> {
 }
 
 class GroupNamePage extends StatelessWidget {
+  String? groupName;
   Function setGroupName;
   Function onItemTapped;
 
-  GroupNamePage({required this.setGroupName, required this.onItemTapped});
+  GroupNamePage(
+      {this.groupName, required this.setGroupName, required this.onItemTapped});
 
-  final TextEditingController nameController = TextEditingController();
+  TextEditingController? nameController;
 
   @override
   Widget build(BuildContext context) {
+    nameController =
+        TextEditingController(text: groupName != null ? groupName : "");
     return Scaffold(
       body: Center(
         child: Column(
@@ -135,7 +141,7 @@ class GroupNamePage extends StatelessWidget {
                   padding: const EdgeInsets.all(24.0),
                   child: ElevatedButton(
                       onPressed: () {
-                        setGroupName(nameController.text);
+                        setGroupName(nameController!.text);
                         Navigator.pushNamed(context, '/tagline');
                       },
                       child: Text("Next")),
@@ -150,15 +156,21 @@ class GroupNamePage extends StatelessWidget {
 }
 
 class GroupTaglinePage extends StatelessWidget {
+  String? groupTagline;
   Function setGroupTagline;
   Function onItemTapped;
 
-  GroupTaglinePage({required this.setGroupTagline, required this.onItemTapped});
+  GroupTaglinePage(
+      {this.groupTagline,
+      required this.setGroupTagline,
+      required this.onItemTapped});
 
-  final TextEditingController taglineController = TextEditingController();
+  TextEditingController? taglineController;
 
   @override
   Widget build(BuildContext context) {
+    taglineController =
+        TextEditingController(text: groupTagline != null ? groupTagline : "");
     return Scaffold(
       body: Center(
         child: Column(
@@ -206,7 +218,7 @@ class GroupTaglinePage extends StatelessWidget {
                   padding: const EdgeInsets.all(24.0),
                   child: ElevatedButton(
                       onPressed: () {
-                        setGroupTagline(taglineController.text);
+                        setGroupTagline(taglineController!.text);
                         Navigator.pushNamed(context, '/photo');
                       },
                       child: Text("Next")),
@@ -221,13 +233,15 @@ class GroupTaglinePage extends StatelessWidget {
 }
 
 class GroupPhotoPage extends StatelessWidget {
+  Uint8List? groupPhoto;
   Function setGroupPhoto;
   Function submitToRTDB;
   Function onItemTapped;
   FirebaseAuth auth;
 
   GroupPhotoPage(
-      {required this.setGroupPhoto,
+      {this.groupPhoto,
+      required this.setGroupPhoto,
       required this.submitToRTDB,
       required this.onItemTapped,
       required this.auth});
@@ -261,9 +275,13 @@ class GroupPhotoPage extends StatelessWidget {
             Flexible(
               flex: 3,
               child: InkWell(
-                  onTap: () => showDialog(
-                      context: context,
-                      builder: (BuildContext context) => Dialog(
+                  onTap: () {
+                    BuildContext dialogContext;
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          dialogContext = context;
+                          return Dialog(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -273,6 +291,7 @@ class GroupPhotoPage extends StatelessWidget {
                                     ElevatedButton(
                                         onPressed: () {
                                           getMyImage(ImageSource.camera);
+                                          Navigator.pop(dialogContext);
                                         },
                                         child: Row(children: const [
                                           Text("Take a Picture"),
@@ -281,6 +300,7 @@ class GroupPhotoPage extends StatelessWidget {
                                     ElevatedButton(
                                         onPressed: () {
                                           getMyImage(ImageSource.gallery);
+                                          Navigator.pop(dialogContext);
                                         },
                                         child: Row(children: const [
                                           Text("Choose from Gallery"),
@@ -290,8 +310,12 @@ class GroupPhotoPage extends StatelessWidget {
                                 ),
                               ],
                             ),
-                          )),
+                          );
+                        });
+                  },
                   child: Container(
+                    child:
+                        groupPhoto != null ? Image.memory(groupPhoto!) : null,
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.blue,

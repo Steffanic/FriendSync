@@ -47,10 +47,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool isUserLoggedIn = false;
-  List<GroupMetaData>? groupMD;
-  List<GroupPageState> friendGroups;
 
-  _HomePageState({this.friendGroups = const [], this.groupMD});
+  _HomePageState();
 
   @override
   void initState() {
@@ -78,8 +76,17 @@ class _HomePageState extends State<HomePage> {
         '/group': (context) => GroupPage(
               auth: widget.auth!,
             ),
+        '/group_settings': (context) => SettingsPage(
+              auth: widget.auth,
+              db: widget.db,
+            ),
+        '/user_settings': (context) => SettingsPage(
+              auth: widget.auth,
+              db: widget.db,
+            ),
         '/settings': (context) => SettingsPage(
               auth: widget.auth,
+              db: widget.db,
             ),
         '/add_new_group': (context) => AddNewGroupPage(auth: widget.auth)
       },
@@ -88,6 +95,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 class MainPage extends StatefulWidget {
+  //Consider making Stateless
   final FirebaseAuth auth;
   MainPage({Key? key, required this.auth}) : super(key: key);
 
@@ -96,58 +104,56 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  bool isUserLoggedIn = false;
-
-  // ignore: unused_element
   _MainPageState();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
-      decoration: const BoxDecoration(
-          gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.white, Colors.blue])),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Flexible(
-            child: CurrentUserStatusCard(userID: widget.auth.currentUser!.uid),
-            flex: 2,
-          ),
-          Expanded(
-            child: Consumer<FriendGroupProvider>(
-              builder: (context, friendGroupProvider, child) => Container(
-                margin: EdgeInsets.only(left: 32, right: 32),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: GridView.count(
-                    crossAxisSpacing: 25,
-                    crossAxisCount: 2,
-                    clipBehavior: Clip.antiAlias,
-                    children: [
-                      ...friendGroupProvider.friendGroups.map((groupMetaData) {
-                        friendGroupProvider
-                            .updateGroupSize(groupMetaData.groupID);
-                        return FriendGroupCard(
-                          groupMetaData: groupMetaData,
-                          auth: widget.auth,
-                        );
-                      }).toList(),
-                      AddNewGroupCard(
-                        auth: widget.auth,
-                      )
-                    ],
+        body: SafeArea(
+      child: Container(
+        decoration: const BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white, Colors.blue])),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Flexible(
+              child:
+                  CurrentUserStatusCard(userID: widget.auth.currentUser!.uid),
+              flex: 2,
+            ),
+            Expanded(
+              child: Consumer<FriendGroupProvider>(
+                builder: (context, friendGroupProvider, child) => Container(
+                  margin: EdgeInsets.only(left: 32, right: 32),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: GridView.count(
+                      crossAxisSpacing: 25,
+                      crossAxisCount: 2,
+                      clipBehavior: Clip.antiAlias,
+                      children: [
+                        ...friendGroupProvider.friendGroups!
+                            .map((groupMetaData) {
+                          friendGroupProvider
+                              .updateGroupSize(groupMetaData.groupID);
+                          return FriendGroupCard(
+                            groupMetaData: groupMetaData,
+                          );
+                        }).toList(),
+                        AddNewGroupCard()
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            flex: 4,
-          )
-        ],
+              flex: 4,
+            )
+          ],
+        ),
       ),
     ));
   }
@@ -261,9 +267,8 @@ class CurrentUserStatusCard extends StatelessWidget {
 
 class FriendGroupCard extends StatelessWidget {
   final GroupMetaData groupMetaData;
-  final FirebaseAuth auth;
 
-  FriendGroupCard({required this.groupMetaData, required this.auth});
+  FriendGroupCard({required this.groupMetaData});
 
   @override
   Widget build(BuildContext context) {
@@ -276,8 +281,7 @@ class FriendGroupCard extends StatelessWidget {
             // it passes the details about the group that was selected as arguments.
             onTap: () {
               Navigator.pushNamed(context, '/group',
-                      arguments: groupMetaData.groupID)
-                  .then((value) => checkForLoggedInUser(context, auth));
+                  arguments: groupMetaData.groupID);
             },
             child: Container(
               height: 150,
@@ -370,9 +374,7 @@ class FriendGroupCard extends StatelessWidget {
 }
 
 class AddNewGroupCard extends StatelessWidget {
-  final FirebaseAuth auth;
-
-  AddNewGroupCard({required this.auth});
+  AddNewGroupCard();
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
@@ -384,7 +386,7 @@ class AddNewGroupCard extends StatelessWidget {
               Navigator.pushNamed(
                 context,
                 '/add_new_group',
-              ).then((value) => checkForLoggedInUser(context, auth));
+              );
             },
             child: Container(
                 margin: EdgeInsets.all(6),

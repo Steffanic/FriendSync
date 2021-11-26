@@ -48,9 +48,10 @@ class FriendGroupProvider extends ChangeNotifier {
   final firebase_storage.FirebaseStorage? storage;
   final GoogleAuthProvider? googleProvider;
 
-  List<GroupMetaData> friendGroups;
-  late Map<String, Map<String, dynamic>> memberLists = {};
-  List<Member> members;
+  List<GroupMetaData>? friendGroups = [];
+  Map<String, Map<String, dynamic>> memberLists = {};
+  List<Member> members = [];
+  List<String>? groupIDs;
   String newGroupID;
   String newGroupPhotoURL;
 
@@ -62,25 +63,27 @@ class FriendGroupProvider extends ChangeNotifier {
 
   late StreamSubscription<Event> _memberListStream;
 
+  late StreamSubscription<Event> _groupListStream;
+
   FriendGroupProvider({
     this.auth,
     this.db,
     this.storage,
     this.googleProvider,
-    this.friendGroups = const [],
-    this.members = const [],
     this.newGroupID = "",
     this.newGroupPhotoURL = "",
   }) {
-    _listenToFriendGroups();
     _listenToMembers();
+    _listenToGroupList();
+    _listenToFriendGroups();
+
     _listenToMemberLists();
   }
 
   GroupMetaData getGroupByID(String groupID) {
     updateGroupSize(groupID);
     final grpOrEmpty =
-        friendGroups.where((grp) => grp.groupID == groupID).toList();
+        friendGroups!.where((grp) => grp.groupID == groupID).toList();
     if (grpOrEmpty.isEmpty) {
       throw GroupNotFoundException(groupID);
     } else {
@@ -117,19 +120,34 @@ class FriendGroupProvider extends ChangeNotifier {
     return auth!.currentUser!.uid;
   }
 
+  void _listenToGroupList() {
+    try {
+      _groupListStream = db!
+          .child(MEMBER_PATH)
+          .child(auth!.currentUser!.uid)
+          .child('groupList')
+          .onValue
+          .listen((event) {
+        groupIDs = List<String>.from(event.snapshot.value.values);
+        notifyListeners();
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
   void _listenToFriendGroups() {
     try {
       _friendGroupStream = db!.child(FRIEND_GROUP_PATH).onValue.listen((event) {
-        friendGroups = Map<String, dynamic>.from(event.snapshot.value)
-            .entries
-            .map((grp) {
-              Map<String, dynamic> gMD = Map<String, dynamic>.from(grp.value);
-              return GroupMetaData.fromRTDB(grp.key, gMD);
-            })
-            .toList()
-            .cast<GroupMetaData>();
-        print(friendGroups);
+        event.snapshot.value.entries.forEach((grp) {
+          if (!groupIDs!.contains(grp.key)) {
+          } else {
+            Map<String, dynamic> gMD = Map<String, dynamic>.from(grp.value);
+            friendGroups?.add(GroupMetaData.fromRTDB(grp.key, gMD));
+          }
+        });
         notifyListeners();
+        print(friendGroups!);
       });
     } catch (e) {
       print("You should be testing if this is a cast error $e");
@@ -139,10 +157,12 @@ class FriendGroupProvider extends ChangeNotifier {
   void _listenToMemberLists() {
     try {
       _memberListStream = db!.child(MEMBER_LIST_PATH).onValue.listen((event) {
-        var listOfMembers =
-            Map<String, Map<String, dynamic>>.from(event.snapshot.value);
-        print(listOfMembers.values);
-        memberLists = listOfMembers;
+        var memberListMap = Map<String, dynamic>.from(event.snapshot.value);
+        final listOfMemberLists = memberListMap;
+        for (String key in listOfMemberLists.keys) {
+          memberLists[key] = Map<String, dynamic>.from(listOfMemberLists[key]);
+        }
+
         notifyListeners();
       });
     } catch (e) {
@@ -155,10 +175,13 @@ class FriendGroupProvider extends ChangeNotifier {
       var memberFuture = db!.child(MEMBER_PATH).onValue.listen((event) {
         var memberMap = Map<String, dynamic>.from(event.snapshot.value);
         final listOfMembers = memberMap;
-        members = listOfMembers.entries
-            .map((mem) => Member.fromRTDB(mem.key, mem.value))
-            .toList();
-        notifyListeners();
+        for (String key in listOfMembers.keys) {
+          Map<String, dynamic> memInfo =
+              Map<String, dynamic>.from(listOfMembers[key]);
+          final mem = Member.fromRTDB(key, memInfo);
+          members.add(mem);
+          notifyListeners();
+        }
       });
     } catch (e) {
       print("You should be testing if this is a cast error $e");
@@ -196,6 +219,8 @@ class FriendGroupProvider extends ChangeNotifier {
       'groupSize': groupSize,
       'isFavoriteGroup': isFavoriteGroup
     });
+
+    addGroupToMemberRTDB(newGroupID, null);
 
     addMemberToGroupRTDB(Member(memberID: auth!.currentUser!.uid), newGroupID);
 
@@ -257,5 +282,12 @@ class FriendGroupProvider extends ChangeNotifier {
     favoriteGroupReference
         .get()
         .then((value) => favoriteGroupReference.set(!value.value));
+  }
+
+  void addGroupToMemberRTDB(String newGroupID, String? memID) {
+    memID = memID == null ? auth!.currentUser!.uid : memID;
+    DatabaseReference memberReference =
+        db!.child(MEMBER_PATH).child(memID).child('groupList');
+    memberReference.update({newGroupID: newGroupID});
   }
 }

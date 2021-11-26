@@ -25,6 +25,8 @@ import 'package:friend_sync/utility.dart';
 import 'package:provider/provider.dart';
 
 const double IMAGE_MARGIN = 6.0;
+const String GENERIC_MEMBER_URL =
+      "https://im4.ezgif.com/tmp/ezgif-4-cb158ea80934.gif";
 
 class GroupPage extends StatefulWidget {
   final FirebaseAuth? auth;
@@ -38,8 +40,8 @@ class GroupPage extends StatefulWidget {
 }
 
 class _GroupPageState extends State<GroupPage> {
-  late final String groupID;
-  bool groupIDInit = false;
+  String? groupID;
+
   _GroupPageState();
 
   @override
@@ -50,70 +52,65 @@ class _GroupPageState extends State<GroupPage> {
   @override
   Widget build(BuildContext context) {
     checkForLoggedInUser(context, widget.auth!);
-    if (!groupIDInit) {
-      groupID = ModalRoute.of(context)!.settings.arguments as String;
-      groupIDInit = true;
-    }
+
+    groupID ??= ModalRoute.of(context)!.settings.arguments as String;
 
     return Scaffold(
-        body: Container(
-            decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.white, Colors.blue])),
-            child: Column(mainAxisSize: MainAxisSize.max, children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InkWell(
-                      onTap: () => _onItemTapped(0),
-                      child: Icon(Icons.arrow_left_rounded)),
-                  InkWell(
-                      onTap: () => _onItemTapped(1),
-                      child: Icon(Icons.settings))
-                ],
-              ),
-              Flexible(
-                child: Consumer<FriendGroupProvider>(
-                    builder: (context, friendGroupProvider, child) {
-                  return GroupStatusCard(
-                      friendGroupProvider.getGroupByID(groupID));
-                }),
-                flex: 2,
-              ),
-              Flexible(child: Consumer<FriendGroupProvider>(
+        body: SafeArea(
+      child: Container(
+          decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.white, Colors.blue])),
+          child: Column(mainAxisSize: MainAxisSize.max, children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                InkWell(
+                    onTap: () => _onItemTapped(0),
+                    child: Icon(Icons.arrow_left_rounded)),
+                InkWell(
+                    onTap: () => _onItemTapped(1), child: Icon(Icons.settings))
+              ],
+            ),
+            Flexible(
+              child: Consumer<FriendGroupProvider>(
                   builder: (context, friendGroupProvider, child) {
-                var memberChips;
-                try {
-                  memberChips = friendGroupProvider
-                      .getMemberList(groupID)
-                      .entries
-                      .map((memID) => InkWell(
-                            onTap: () => _removeMember(
-                                friendGroupProvider.getMemberByID(memID.value),
-                                friendGroupProvider),
-                            child: MemberStatusChip(
-                                member: friendGroupProvider
-                                    .getMemberByID(memID.value),
-                                groupID: groupID),
-                          ))
-                      .toList();
-                } catch (e) {
-                  print("$e");
-                  memberChips = [];
-                } finally {}
-                return Wrap(
-                  direction: Axis.horizontal,
-                  spacing: 12.0,
-                  runSpacing: 12.0,
-                  children: [
-                    ...memberChips,
-                    AddMemberCard(_addMember, groupID)
-                  ],
-                );
-              }))
-            ])));
+                return GroupStatusCard(
+                    friendGroupProvider.getGroupByID(groupID!));
+              }),
+              flex: 2,
+            ),
+            Flexible(child: Consumer<FriendGroupProvider>(
+                builder: (context, friendGroupProvider, child) {
+              var memberChips;
+              try {
+                memberChips = friendGroupProvider
+                    .getMemberList(groupID!)
+                    .entries
+                    .map((memID) => InkWell(
+                          onTap: () => _removeMember(
+                              friendGroupProvider.getMemberByID(memID.value),
+                              friendGroupProvider),
+                          child: MemberStatusChip(
+                              member: friendGroupProvider
+                                  .getMemberByID(memID.value)),
+                        ))
+                    .toList();
+              } catch (e) {
+                print("$e");
+                memberChips = [];
+              } finally {}
+              return Wrap(
+                direction: Axis.horizontal,
+                spacing: 12.0,
+                runSpacing: 12.0,
+                children: [...memberChips, AddMemberCard(_addMember, groupID!)],
+              );
+            }))
+          ])),
+    ));
   }
 
   void _onItemTapped(int index) {
@@ -127,32 +124,33 @@ class _GroupPageState extends State<GroupPage> {
   }
 
   void _addMember(Member newMember, FriendGroupProvider friendGroupProvider) {
-    if (friendGroupProvider.isInGroup(newMember, groupID)) {
+    if (friendGroupProvider.isInGroup(newMember, groupID!)) {
       _showToast(context, "They are already in your group!");
     } else {
-      friendGroupProvider.addMemberToGroupRTDB(newMember, groupID);
+      friendGroupProvider.addMemberToGroupRTDB(newMember, groupID!);
+      friendGroupProvider.addGroupToMemberRTDB(groupID!, newMember.memberID);
       _showToast(
           context,
           newMember.memberName +
               " has been added to " +
-              friendGroupProvider.getGroupByID(groupID).groupName);
+              friendGroupProvider.getGroupByID(groupID!).groupName);
     }
   }
 
   void _removeMember(Member member, FriendGroupProvider friendGroupProvider) {
-    if (!friendGroupProvider.isInGroup(member, groupID)) {
+    if (!friendGroupProvider.isInGroup(member, groupID!)) {
       _showToast(context,
           "I don't know how you did it, but you are trying to remove a member who doesn't belong to this group 🤷‍♂️");
     }
     if (widget.auth!.currentUser!.uid == member.memberID) {
       _showToast(context, "You can't remove yourself, silly!");
     } else {
-      friendGroupProvider.removeMemberFromGroupRTDB(member, groupID);
+      friendGroupProvider.removeMemberFromGroupRTDB(member, groupID!);
       _showToast(
           context,
           member.memberName +
               " has been removed from " +
-              friendGroupProvider.getGroupByID(groupID).groupName);
+              friendGroupProvider.getGroupByID(groupID!).groupName);
     }
   }
 
@@ -252,7 +250,7 @@ class GroupStatusCard extends StatelessWidget {
                                 builder: (context, friendGroupProvider,
                                         child) =>
                                     Text(
-                                        "${friendGroupProvider.friendGroups.where((grp) => grp.groupID == groupMetaData.groupID).toList()[0].groupSize}"))),
+                                        "${friendGroupProvider.friendGroups!.where((grp) => grp.groupID == groupMetaData.groupID).toList()[0].groupSize}"))),
                         Icon(
                           Icons.person,
                           color: Colors.green,
@@ -270,11 +268,9 @@ class GroupStatusCard extends StatelessWidget {
 
 class MemberStatusChip extends StatelessWidget {
   final Member member;
-  final String groupID;
 
   const MemberStatusChip({
     this.member = const Member(),
-    required this.groupID,
   });
 
   @override
@@ -314,9 +310,7 @@ class AddMemberCard extends StatelessWidget {
 }
 
 class AddMemberDialog extends StatelessWidget {
-  final Function addMemberFunction;
-  final String genericMemberURL =
-      "https://im4.ezgif.com/tmp/ezgif-4-cb158ea80934.gif";
+  final Function addMemberFunction; 
   final String groupID;
   // ignore: use_key_in_widget_constructors
   const AddMemberDialog(this.addMemberFunction, this.groupID);
@@ -342,8 +336,7 @@ class AddMemberDialog extends StatelessWidget {
                         return InkWell(
                           onTap: () =>
                               addMemberFunction(mem, friendGroupProvider),
-                          child:
-                              MemberStatusChip(member: mem, groupID: groupID),
+                          child: MemberStatusChip(member: mem),
                         );
                       }).toList()
                     ],
@@ -362,23 +355,14 @@ class AddNewGroupPage extends StatefulWidget {
 }
 
 class _AddNewGroupState extends State<AddNewGroupPage> {
-  var groupName;
 
   _AddNewGroupState();
 
   @override
   Widget build(BuildContext context) {
     checkForLoggedInUser(context, widget.auth!);
-    return Scaffold(body: GroupCreationPage(auth: widget.auth!));
+    return Scaffold(
+        body: SafeArea(child: GroupCreationPage(auth: widget.auth!)));
   }
 
-  void _onItemTapped(int index) {
-    if (index == 0) {
-      Navigator.popUntil(context, ModalRoute.withName('/'));
-    }
-    if (index == 1) {
-      Navigator.pushNamed(context, "/settings")
-          .then((value) => checkForLoggedInUser(context, widget.auth!));
-    }
-  }
 }

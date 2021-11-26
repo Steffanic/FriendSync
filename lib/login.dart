@@ -37,32 +37,34 @@ class LogInPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        body: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            const Expanded(
-              flex: 2,
-              child: Text(
-                "Log in:",
-                style: TextStyle(fontSize: 36),
+        body: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              const Expanded(
+                flex: 2,
+                child: Text(
+                  "Log in:",
+                  style: TextStyle(fontSize: 36),
+                ),
               ),
-            ),
-            const Flexible(
-              flex: 2,
-              child: Image(
-                  image: NetworkImage(
-                      "https://img.freepik.com/free-vector/mobile-login-concept-illustration_114360-135.jpg?size=338&ext=jpg")),
-            ),
-            Flexible(
-                flex: 3,
-                child: LogInForm(
-                  auth: auth,
-                  db: db,
-                  storage: storage,
-                  googleProvider: googleProvider,
-                )),
-          ],
+              const Flexible(
+                flex: 2,
+                child: Image(
+                    image: NetworkImage(
+                        "https://img.freepik.com/free-vector/mobile-login-concept-illustration_114360-135.jpg?size=338&ext=jpg")),
+              ),
+              Flexible(
+                  flex: 3,
+                  child: LogInForm(
+                    auth: auth,
+                    db: db,
+                    storage: storage,
+                    googleProvider: googleProvider,
+                  )),
+            ],
+          ),
         ),
       ),
     );

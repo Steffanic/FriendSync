@@ -138,25 +138,13 @@ class LogInFormState extends State<LogInForm> {
               ElevatedButton(
                 onPressed: () => signInWithGoogle(),
                 child: Image(
-                    image: AssetImage(
-                        'google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png')),
+                    image: !kIsWeb
+                        ? AssetImage(
+                            "assets/google_signin_buttons/android/hdpi/btn_google_dark_normal_hdpi.9.png")
+                        : AssetImage(
+                            'assets/google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png')),
               )
             ],
-          ),
-          Flexible(
-            flex: 2,
-            child: ElevatedButton(
-              onPressed: () {
-                registerUser();
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  "Register",
-                  style: TextStyle(fontSize: 24),
-                ),
-              ),
-            ),
           ),
         ],
       ),
@@ -215,8 +203,22 @@ class LogInFormState extends State<LogInForm> {
   Future<void> signInWithGoogle() async {
     UserCredential? userCredential;
     if (kIsWeb) {
-      UserCredential userCredential =
-          await widget.auth!.signInWithPopup(widget.googleProvider!);
+      await widget.auth!.signInWithPopup(widget.googleProvider!).then((value) {
+        user = value.user;
+        final userRef = widget.db!.child('members').child(user!.uid);
+        userRef.update({'email': user!.email});
+        userRef.update({'name': user!.displayName});
+        userRef.update({'profilePictureURL': user!.photoURL});
+        userRef.update({
+          'friendList': {user!.uid: user!.uid}
+        });
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (context) => HomePage(
+                  auth: widget.auth,
+                  db: widget.db,
+                  storage: widget.storage,
+                )));
+      });
     }
     if (Platform.isAndroid) {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -224,25 +226,24 @@ class LogInFormState extends State<LogInForm> {
           await googleUser?.authentication.then((value) async {
         final credential = GoogleAuthProvider.credential(
             accessToken: value.accessToken, idToken: value.idToken);
-        UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
+        FirebaseAuth.instance.signInWithCredential(credential).then((value) {
+          user = value.user;
+          final userRef = widget.db!.child('members').child(user!.uid);
+          userRef.update({'email': user!.email});
+          userRef.update({'name': user!.displayName});
+          userRef.update({'profilePictureURL': user!.photoURL});
+          userRef.update({
+            'friendList': {user!.uid: user!.uid}
+          });
+          Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (context) => HomePage(
+                    auth: widget.auth,
+                    db: widget.db,
+                    storage: widget.storage,
+                  )));
+        });
       });
     }
-    user = userCredential!.user;
-    final userRef = widget.db!.child('members').child(user!.uid);
-    userRef.update({'email': user!.email});
-    userRef.update({'name': user!.displayName});
-    userRef.update({'profilePictureURL': user!.photoURL});
-    userRef.update({
-      'friendList': {user!.uid: user!.uid}
-    });
-
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (context) => HomePage(
-              auth: widget.auth,
-              db: widget.db,
-              storage: widget.storage,
-            )));
   }
 }
 
