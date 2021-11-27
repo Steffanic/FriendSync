@@ -15,6 +15,10 @@
    */
 
 import 'dart:io' show Platform;
+import 'dart:typed_data';
+import 'package:friend_sync/arguments.dart';
+import 'package:friend_sync/group.dart';
+import 'package:http/http.dart';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -438,5 +442,155 @@ class NewGroupFormPage extends StatelessWidget {
         home: Scaffold(
       body: NewGroupForm(),
     ));
+  }
+}
+
+class UserSettingsForm extends StatefulWidget {
+  final FirebaseAuth? auth;
+  final DatabaseReference? db;
+  final firebase_storage.FirebaseStorage? storage;
+  final BuildContext? context;
+
+  UserSettingsForm({this.auth, this.db, this.storage, this.context});
+
+  @override
+  UserSettingsFormState createState() {
+    return UserSettingsFormState();
+  }
+}
+
+class UserSettingsFormState extends State<UserSettingsForm> {
+  Uint8List? userPhoto;
+  String? userName;
+  String? userTagline;
+  final pfpController = ImagePicker();
+
+  Future getMyImage(ImageSource source) async {
+    final pickedImage = await pfpController.pickImage(source: source);
+    final pickedImageBytes = await pickedImage!.readAsBytes();
+    setState(() {
+      userPhoto = pickedImageBytes;
+    });
+  }
+
+  void setUserPhoto(String url) {
+    readBytes(Uri.parse(url)).then((value) {
+      setState(() {
+        userPhoto = value.buffer.asUint8List();
+      });
+    });
+  }
+
+  final _userSettingsKey = GlobalKey<FormState>();
+  late final nameController;
+  late final statusController;
+
+  @override
+  void initState() {
+    FriendGroupProvider friendGroupProvider =
+        Provider.of(widget.context!, listen: false);
+
+    var url = friendGroupProvider
+        .getMemberByID(friendGroupProvider.getCurrentMemberID())
+        .memberProfilePicture;
+    setUserPhoto(url);
+    userName = friendGroupProvider
+        .getMemberByID(friendGroupProvider.getCurrentMemberID())
+        .memberName;
+    userTagline = friendGroupProvider
+        .getMemberByID(friendGroupProvider.getCurrentMemberID())
+        .memberStatus;
+
+    nameController = TextEditingController(text: userName);
+    statusController = TextEditingController(text: userTagline);
+
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Flexible(
+            flex: 1,
+            child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  child: InkWell(
+                      radius: 5,
+                      onTap: () {
+                        BuildContext dialogContext;
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              dialogContext = context;
+                              return Dialog(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ElevatedButton(
+                                            onPressed: () {
+                                              getMyImage(ImageSource.camera);
+                                              Navigator.pop(dialogContext);
+                                            },
+                                            child: Row(children: const [
+                                              Text("Take a Picture"),
+                                              Icon(Icons.camera),
+                                            ])),
+                                        ElevatedButton(
+                                            onPressed: () {
+                                              getMyImage(ImageSource.gallery);
+                                              Navigator.pop(dialogContext);
+                                            },
+                                            child: Row(children: const [
+                                              Text("Choose from Gallery"),
+                                              Icon(Icons.photo),
+                                            ])),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            });
+                      }),
+                  decoration: BoxDecoration(
+                      image: DecorationImage(
+                          image: (userPhoto != null
+                              ? MemoryImage(userPhoto!) as ImageProvider
+                              : NetworkImage(GENERIC_MEMBER_URL))),
+                      shape: BoxShape.circle,
+                      color: Colors.blue,
+                      gradient: LinearGradient(
+                          colors: [Colors.white, Colors.blue],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter)),
+                )),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Flexible(
+                    flex: 3,
+                    child: TextFormField(
+                      controller: nameController,
+                    )),
+                Flexible(
+                    flex: 3,
+                    child: TextFormField(
+                      controller: statusController,
+                    ))
+              ]),
+            ),
+          )
+        ],
+      ),
+    );
   }
 }

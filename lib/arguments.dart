@@ -14,11 +14,16 @@
    limitations under the License.
 */
 
+const double IMAGE_MARGIN = 6.0;
+const String GENERIC_MEMBER_URL =
+    "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png";
+
 class Member {
   final String memberName;
   final String memberEmail;
   final String memberProfilePicture;
   final String memberID; //Firebase User ID.
+  final String memberStatus;
   final List<String> friendList;
   final List<String> groupList;
 
@@ -27,6 +32,7 @@ class Member {
     this.memberName = "Patrick Steffanic",
     this.memberEmail = "email@gmail.com",
     this.memberProfilePicture = "https://i.imgur.com/cWgJmWt.jpg",
+    this.memberStatus = "Down to hang out this weekend!",
     this.friendList = const [],
     this.groupList = const [],
   });
@@ -48,6 +54,7 @@ class Member {
         memberEmail: memMap['email'],
         memberName: memMap['name'],
         memberProfilePicture: memMap['profilePictureURL'],
+        memberStatus: memMap['status'],
         friendList: memFriendList,
         groupList: memGroupList);
   }

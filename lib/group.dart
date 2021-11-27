@@ -24,9 +24,7 @@ import 'package:friend_sync/providers.dart';
 import 'package:friend_sync/utility.dart';
 import 'package:provider/provider.dart';
 
-const double IMAGE_MARGIN = 6.0;
-const String GENERIC_MEMBER_URL =
-      "https://im4.ezgif.com/tmp/ezgif-4-cb158ea80934.gif";
+
 
 class GroupPage extends StatefulWidget {
   final FirebaseAuth? auth;
@@ -310,7 +308,7 @@ class AddMemberCard extends StatelessWidget {
 }
 
 class AddMemberDialog extends StatelessWidget {
-  final Function addMemberFunction; 
+  final Function addMemberFunction;
   final String groupID;
   // ignore: use_key_in_widget_constructors
   const AddMemberDialog(this.addMemberFunction, this.groupID);
@@ -355,7 +353,6 @@ class AddNewGroupPage extends StatefulWidget {
 }
 
 class _AddNewGroupState extends State<AddNewGroupPage> {
-
   _AddNewGroupState();
 
   @override
@@ -364,5 +361,4 @@ class _AddNewGroupState extends State<AddNewGroupPage> {
     return Scaffold(
         body: SafeArea(child: GroupCreationPage(auth: widget.auth!)));
   }
-
 }

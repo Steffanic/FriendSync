@@ -14,19 +14,29 @@
    limitations under the License.
    */
 
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
+import 'package:friend_sync/forms.dart';
+import 'package:friend_sync/group.dart';
+import 'package:http/http.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:friend_sync/home.dart';
+import 'package:friend_sync/providers.dart';
 import 'package:friend_sync/utility.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
   final FirebaseAuth? auth;
   final DatabaseReference? db;
+  final BuildContext? context;
 
-  SettingsPage({this.auth, this.db});
+  SettingsPage({this.auth, this.db, this.context});
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
@@ -42,41 +52,55 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Container(
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InkWell(
-                      onTap: () => _onItemTapped(0),
-                      child: Icon(Icons.arrow_left_rounded)),
-                ],
+              Flexible(
+                flex: 1,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InkWell(
+                        onTap: () => _onItemTapped(0),
+                        child: Icon(Icons.arrow_left_rounded)),
+                  ],
+                ),
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  final gSign = GoogleSignIn();
-                  if (gSign.currentUser != null) {
-                    await gSign.signOut().then((value) async {
-                      await widget.auth!.signOut().then((_) {
-                        return Navigator.push(context,
-                            MaterialPageRoute(builder: (context) {
-                          return HomePage(
-                            auth: widget.auth,
-                            db: widget.db,
-                          );
-                        }));
+              Flexible(
+                  flex: 4,
+                  child: UserSettingsForm(
+                    auth: widget.auth,
+                    db: widget.db,
+                    storage: null,
+                    context: context,
+                  )),
+              Flexible(
+                flex: 1,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final gSign = GoogleSignIn();
+                    if (gSign.currentUser != null) {
+                      await gSign.signOut().then((value) async {
+                        await widget.auth!.signOut().then((_) {
+                          return Navigator.push(context,
+                              MaterialPageRoute(builder: (context) {
+                            return HomePage(
+                              auth: widget.auth,
+                              db: widget.db,
+                            );
+                          }));
+                        });
                       });
+                    }
+                    await widget.auth!.signOut().then((_) {
+                      return Navigator.push(context,
+                          MaterialPageRoute(builder: (context) {
+                        return HomePage(
+                          auth: widget.auth,
+                          db: widget.db,
+                        );
+                      }));
                     });
-                  }
-                  await widget.auth!.signOut().then((_) {
-                    return Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return HomePage(
-                        auth: widget.auth,
-                        db: widget.db,
-                      );
-                    }));
-                  });
-                },
-                child: Text("Log Out."),
+                  },
+                  child: Text("Log Out."),
+                ),
               ),
             ],
           ),

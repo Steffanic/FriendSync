@@ -30,7 +30,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
-const double IMAGE_MARGIN = 6.0;
+
 
 class HomePage extends StatefulWidget {
   final FirebaseAuth? auth;
@@ -79,14 +79,17 @@ class _HomePageState extends State<HomePage> {
         '/group_settings': (context) => SettingsPage(
               auth: widget.auth,
               db: widget.db,
+              context: context,
             ),
         '/user_settings': (context) => SettingsPage(
               auth: widget.auth,
               db: widget.db,
+              context: context,
             ),
         '/settings': (context) => SettingsPage(
               auth: widget.auth,
               db: widget.db,
+              context: context,
             ),
         '/add_new_group': (context) => AddNewGroupPage(auth: widget.auth)
       },
@@ -215,25 +218,32 @@ class CurrentUserStatusCard extends StatelessWidget {
             flex: 6,
             child: Container(
                 margin: EdgeInsets.all(6),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.max,
-                  children: const [
-                    Flexible(
-                        flex: 4,
-                        child: FittedBox(
-                            child: Text(
-                          "Patrick Steffanic",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontFamily: "Noto Sans"),
-                        ))),
-                    Flexible(
-                        flex: 2,
-                        child: Text("Status: Down to clown!",
+                child: Consumer<FriendGroupProvider>(
+                  builder: (context, friendGroupProvder, child) => Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Flexible(
+                          flex: 4,
+                          child: FittedBox(
+                              child: Text(
+                            friendGroupProvder
+                                .getMemberByID(userID!)
+                                .memberName,
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontFamily: "Noto Sans"))),
-                  ],
+                            style: const TextStyle(fontFamily: "Noto Sans"),
+                          ))),
+                      Flexible(
+                          flex: 2,
+                          child: Text(
+                              friendGroupProvder
+                                  .getMemberByID(userID!)
+                                  .memberStatus,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontFamily: "Noto Sans"))),
+                    ],
+                  ),
                 )),
           ),
           Flexible(
