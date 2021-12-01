@@ -242,6 +242,21 @@ class FriendGroupProvider extends ChangeNotifier {
     }
   }
 
+  Future<String> uploadUserPhoto(Uint8List file, String userID) async {
+    try {
+      var userPhotoRef = firebase_storage.FirebaseStorage.instance
+          .ref('userPhotos/')
+          .child("$userID.png");
+
+      await userPhotoRef.putData(file);
+      return userPhotoRef.getDownloadURL();
+      // ignore: nullable_type_in_catch_clause
+    } on FirebaseException catch (e) {
+      print(e);
+      rethrow;
+    }
+  }
+
   void addMemberToGroupRTDB(Member newMember, String groupID) {
     // This function should add the newMember's ID to the list of members in
     // the group with ID groupID. Maybe it should also check to see if the member is in the members table in the DB.
@@ -289,5 +304,20 @@ class FriendGroupProvider extends ChangeNotifier {
     DatabaseReference memberReference =
         db!.child(MEMBER_PATH).child(memID).child('groupList');
     memberReference.update({newGroupID: newGroupID});
+  }
+
+  void updateMemberInfoRTDB(
+      String? memberName, String? memberStatus, String? memberProfilePhotoURL) {
+    DatabaseReference memberReference =
+        db!.child(MEMBER_PATH).child(getCurrentMemberID());
+    if (memberName != null) {
+      memberReference.update({'name': memberName});
+    }
+    if (memberStatus != null) {
+      memberReference.update({'status': memberStatus});
+    }
+    if (memberProfilePhotoURL != null) {
+      memberReference.update({'profilePictureURL': memberProfilePhotoURL});
+    }
   }
 }

@@ -464,6 +464,8 @@ class UserSettingsFormState extends State<UserSettingsForm> {
   String? userName;
   String? userTagline;
   final pfpController = ImagePicker();
+  bool isButtonEnabled = false;
+  bool isImageDifferent = false;
 
   Future getMyImage(ImageSource source) async {
     final pickedImage = await pfpController.pickImage(source: source);
@@ -471,6 +473,8 @@ class UserSettingsFormState extends State<UserSettingsForm> {
     setState(() {
       userPhoto = pickedImageBytes;
     });
+    isButtonEnabled = true;
+    isImageDifferent = true;
   }
 
   void setUserPhoto(String url) {
@@ -580,17 +584,47 @@ class UserSettingsFormState extends State<UserSettingsForm> {
                     flex: 3,
                     child: TextFormField(
                       controller: nameController,
+                      onChanged: (val) {
+                        isButtonEnabled = true;
+                        userName = val;
+                      },
                     )),
                 Flexible(
                     flex: 3,
                     child: TextFormField(
                       controller: statusController,
-                    ))
+                      onChanged: (val) {
+                        isButtonEnabled = true;
+                        userTagline = val;
+                      },
+                    )),
+                Flexible(
+                    child: ElevatedButton(
+                  onPressed: () =>
+                      isButtonEnabled ? _applyChanges(widget.context!) : null,
+                  child: Text("Apply Changes"),
+                  style: ElevatedButton.styleFrom(primary: Colors.blue),
+                ))
               ]),
             ),
           )
         ],
       ),
     );
+  }
+
+  _applyChanges(BuildContext context) async {
+    FriendGroupProvider friendGroupProvider =
+        Provider.of(context, listen: false);
+
+    String? profilePictureURL;
+
+    if (isImageDifferent) {
+      profilePictureURL = await friendGroupProvider.uploadUserPhoto(
+          userPhoto!, friendGroupProvider.getCurrentMemberID());
+    }
+
+    friendGroupProvider.updateMemberInfoRTDB(
+        userName, userTagline, profilePictureURL);
   }
 }
