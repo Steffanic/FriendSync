@@ -599,11 +599,15 @@ class UserSettingsFormState extends State<UserSettingsForm> {
                       },
                     )),
                 Flexible(
-                    child: ElevatedButton(
-                  onPressed: () =>
-                      isButtonEnabled ? _applyChanges(widget.context!) : null,
-                  child: Text("Apply Changes"),
-                  style: ElevatedButton.styleFrom(primary: Colors.blue),
+                    child: Consumer<FriendGroupProvider>(
+                  builder: (context, friendGroupProvider, child) =>
+                      ElevatedButton(
+                    onPressed: () => isButtonEnabled
+                        ? _applyChanges(friendGroupProvider)
+                        : null,
+                    child: Text("Apply Changes"),
+                    style: ElevatedButton.styleFrom(primary: Colors.blue),
+                  ),
                 ))
               ]),
             ),
@@ -613,10 +617,7 @@ class UserSettingsFormState extends State<UserSettingsForm> {
     );
   }
 
-  _applyChanges(BuildContext context) async {
-    FriendGroupProvider friendGroupProvider =
-        Provider.of(context, listen: false);
-
+  _applyChanges(FriendGroupProvider friendGroupProvider) async {
     String? profilePictureURL;
 
     if (isImageDifferent) {

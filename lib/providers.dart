@@ -173,6 +173,7 @@ class FriendGroupProvider extends ChangeNotifier {
   void _listenToMembers() {
     try {
       var memberFuture = db!.child(MEMBER_PATH).onValue.listen((event) {
+        members = [];
         var memberMap = Map<String, dynamic>.from(event.snapshot.value);
         final listOfMembers = memberMap;
         for (String key in listOfMembers.keys) {
@@ -319,5 +320,6 @@ class FriendGroupProvider extends ChangeNotifier {
     if (memberProfilePhotoURL != null) {
       memberReference.update({'profilePictureURL': memberProfilePhotoURL});
     }
+    notifyListeners();
   }
 }
