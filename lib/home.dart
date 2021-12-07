@@ -26,11 +26,10 @@ import 'package:friend_sync/login.dart';
 import 'package:friend_sync/providers.dart';
 import 'package:friend_sync/settings.dart';
 import 'package:friend_sync/utility.dart';
+import 'package:friend_sync/friends.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-
-
 
 class HomePage extends StatefulWidget {
   final FirebaseAuth? auth;
@@ -91,7 +90,8 @@ class _HomePageState extends State<HomePage> {
               db: widget.db,
               context: context,
             ),
-        '/add_new_group': (context) => AddNewGroupPage(auth: widget.auth)
+        '/add_new_group': (context) => AddNewGroupPage(auth: widget.auth),
+        '/friends': (context) => FriendsPage(),
       },
     );
   }
@@ -262,9 +262,12 @@ class CurrentUserStatusCard extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    const Icon(
-                      Icons.person,
-                      color: Colors.green,
+                    InkWell(
+                      onTap: () => Navigator.pushNamed(context, '/friends'),
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.green,
+                      ),
                     ),
                   ],
                 ),
