@@ -106,6 +106,11 @@ class FriendGroupProvider extends ChangeNotifier {
     }
   }
 
+  List<String> getGroupListForMember(String memberID) {
+    Member mem = getMemberByID(memberID);
+    return mem.groupList;
+  }
+
   Member getMemberByID(String memberID) {
     final memberOrEmpty =
         members.where((mem) => mem.memberID == memberID).toList();
