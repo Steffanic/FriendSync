@@ -139,6 +139,7 @@ class FriendGroupProvider extends ChangeNotifier {
   void _listenToFriendGroups() {
     try {
       _friendGroupStream = db!.child(FRIEND_GROUP_PATH).onValue.listen((event) {
+        friendGroups = [];
         event.snapshot.value.entries.forEach((grp) {
           if (!groupIDs!.contains(grp.key)) {
           } else {
@@ -275,6 +276,15 @@ class FriendGroupProvider extends ChangeNotifier {
     memberListReference.update({newMember.memberID: newMember.memberID});
 
     updateGroupSize(groupID);
+    notifyListeners();
+  }
+
+  void addMemberToFriendList(String memberID) {
+    DatabaseReference currentMemberFriendListReference = db!
+        .child(MEMBER_PATH)
+        .child("/${getCurrentMemberID()}")
+        .child("/friendList");
+    currentMemberFriendListReference.update({memberID: memberID});
     notifyListeners();
   }
 

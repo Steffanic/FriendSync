@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:friend_sync/arguments.dart';
 import 'package:friend_sync/providers.dart';
-import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:provider/provider.dart';
 
 class FriendsPage extends StatefulWidget {
@@ -215,8 +214,13 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
                         filteredMembers != null ? filteredMembers!.length : 0,
                     itemBuilder: (BuildContext context, int index) {
                       if (filteredMembers != null) {
-                        return FriendCard(
-                            userID: filteredMembers![index].memberID);
+                        return InkWell(
+                          onTap: () =>
+                              friendGroupProvider.addMemberToFriendList(
+                                  filteredMembers![index].memberID),
+                          child: FriendCard(
+                              userID: filteredMembers![index].memberID),
+                        );
                       }
                       return Text("Test");
                     }),
