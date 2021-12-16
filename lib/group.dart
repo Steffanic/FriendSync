@@ -24,8 +24,6 @@ import 'package:friend_sync/providers.dart';
 import 'package:friend_sync/utility.dart';
 import 'package:provider/provider.dart';
 
-
-
 class GroupPage extends StatefulWidget {
   final FirebaseAuth? auth;
   const GroupPage({
@@ -80,6 +78,11 @@ class _GroupPageState extends State<GroupPage> {
               }),
               flex: 2,
             ),
+            Flexible(
+                child: ElevatedButton(
+              onPressed: () => _onHangOutPressed(),
+              child: Text("Let's Hang Out!"),
+            )),
             Flexible(child: Consumer<FriendGroupProvider>(
                 builder: (context, friendGroupProvider, child) {
               var memberChips;
@@ -100,11 +103,17 @@ class _GroupPageState extends State<GroupPage> {
                 print("$e");
                 memberChips = [];
               } finally {}
-              return Wrap(
-                direction: Axis.horizontal,
-                spacing: 12.0,
-                runSpacing: 12.0,
-                children: [...memberChips, AddMemberCard(_addMember, groupID!)],
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Wrap(
+                  direction: Axis.horizontal,
+                  spacing: 12.0,
+                  runSpacing: 12.0,
+                  children: [
+                    ...memberChips,
+                    AddMemberCard(_addMember, groupID!)
+                  ],
+                ),
               );
             }))
           ])),
@@ -150,6 +159,10 @@ class _GroupPageState extends State<GroupPage> {
               " has been removed from " +
               friendGroupProvider.getGroupByID(groupID!).groupName);
     }
+  }
+
+  void _onHangOutPressed() {
+    _showToast(context, "Let's hang out, man!");
   }
 
   void _showToast(BuildContext context, String msg) {
