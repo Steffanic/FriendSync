@@ -209,13 +209,20 @@ class LogInFormState extends State<LogInForm> {
     if (kIsWeb) {
       await widget.auth!.signInWithPopup(widget.googleProvider!).then((value) {
         user = value.user;
+        bool userExists = false;
         final userRef = widget.db!.child('members').child(user!.uid);
-        userRef.update({'email': user!.email});
-        userRef.update({'name': user!.displayName});
-        userRef.update({'profilePictureURL': user!.photoURL});
-        userRef.update({
-          'friendList': {user!.uid: user!.uid}
+        userRef.get().then((val) {
+          userExists = val.exists;
+          if (!userExists) {
+            userRef.update({'email': user!.email});
+            userRef.update({'name': user!.displayName});
+            userRef.update({'profilePictureURL': user!.photoURL});
+            userRef.update({
+              'friendList': {user!.uid: user!.uid}
+            });
+          }
         });
+
         Navigator.of(context).pushReplacement(MaterialPageRoute(
             builder: (context) => HomePage(
                   auth: widget.auth,
@@ -223,8 +230,7 @@ class LogInFormState extends State<LogInForm> {
                   storage: widget.storage,
                 )));
       });
-    }
-    if (Platform.isAndroid) {
+    } else if (Platform.isAndroid) {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       final GoogleSignInAuthentication? googleAuth =
           await googleUser?.authentication.then((value) async {
@@ -232,13 +238,20 @@ class LogInFormState extends State<LogInForm> {
             accessToken: value.accessToken, idToken: value.idToken);
         FirebaseAuth.instance.signInWithCredential(credential).then((value) {
           user = value.user;
+          bool userExists = false;
           final userRef = widget.db!.child('members').child(user!.uid);
-          userRef.update({'email': user!.email});
-          userRef.update({'name': user!.displayName});
-          userRef.update({'profilePictureURL': user!.photoURL});
-          userRef.update({
-            'friendList': {user!.uid: user!.uid}
+          userRef.get().then((value) {
+            userExists = value.exists;
+            if (!userExists) {
+              userRef.update({'email': user!.email});
+              userRef.update({'name': user!.displayName});
+              userRef.update({'profilePictureURL': user!.photoURL});
+              userRef.update({
+                'friendList': {user!.uid: user!.uid}
+              });
+            }
           });
+
           Navigator.of(context).pushReplacement(MaterialPageRoute(
               builder: (context) => HomePage(
                     auth: widget.auth,
