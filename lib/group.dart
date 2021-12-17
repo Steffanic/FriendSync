@@ -163,6 +163,7 @@ class _GroupPageState extends State<GroupPage> {
 
   void _onHangOutPressed() {
     _showToast(context, "Let's hang out, man!");
+    Navigator.pushNamed(context, '/make_a_plan');
   }
 
   void _showToast(BuildContext context, String msg) {
@@ -373,5 +374,28 @@ class _AddNewGroupState extends State<AddNewGroupPage> {
     checkForLoggedInUser(context, widget.auth!);
     return Scaffold(
         body: SafeArea(child: GroupCreationPage(auth: widget.auth!)));
+  }
+}
+
+class MakeAPlanPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Container(
+          child: Column(
+            children: [
+              Text("Make a Plan"),
+              Divider(
+                thickness: 2,
+                indent: 64,
+                endIndent: 64,
+              ),
+              PlanForm(),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

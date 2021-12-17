@@ -642,3 +642,41 @@ class UserSettingsFormState extends State<UserSettingsForm> {
         userName, userTagline, profilePictureURL);
   }
 }
+
+class PlanForm extends StatefulWidget {
+  @override
+  PlanFormState createState() {
+    return PlanFormState();
+  }
+}
+
+class PlanFormState extends State<PlanForm> {
+  TextEditingController time_controller = TextEditingController();
+  TimeOfDay? hangout_time;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Column(
+        children: [
+          Text.rich(TextSpan(children: <InlineSpan>[
+            TextSpan(text: "I want to hang out at "),
+            WidgetSpan(
+                child: TextField(
+              controller: time_controller,
+              onTap: () => _openTimePicker(),
+            )),
+          ]))
+        ],
+      ),
+    );
+  }
+
+  _openTimePicker() async {
+    showTimePicker(context: context, initialTime: TimeOfDay.now())
+        .then((chosenTime) {
+      hangout_time = chosenTime;
+      time_controller.text = hangout_time!.format(context);
+    });
+  }
+}

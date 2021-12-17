@@ -92,6 +92,7 @@ class _HomePageState extends State<HomePage> {
             ),
         '/add_new_group': (context) => AddNewGroupPage(auth: widget.auth),
         '/friends': (context) => FriendsPage(),
+        '/make_a_plan': (context) => MakeAPlanPage(),
       },
     );
   }
